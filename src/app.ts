@@ -80,10 +80,20 @@ export function createApp(deps: AppDeps): Express {
 
   app.get('/oauth/login', (_req, res) => {
     const state = stateStore.generate();
+    // 显式声明所需的用户身份 scope：未传 scope 时飞书只授予已发布版本中的权限，
+    // 排查权限问题（99991679）时显式声明可以让飞书直接报出缺失的权限名。
+    const scopes = [
+      'im:chat:readonly',
+      'im:message',
+      'im:message:readonly',
+      'mail:user_mailbox.folder:read',
+      'mail:user_mailbox.message:readonly',
+    ].join(' ');
     const url =
       `${FEISHU_AUTHORIZE_URL}?app_id=${encodeURIComponent(config.appId)}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&state=${encodeURIComponent(state)}`;
+      `&state=${encodeURIComponent(state)}` +
+      `&scope=${encodeURIComponent(scopes)}`;
     res.redirect(302, url);
   });
 
@@ -108,6 +118,8 @@ export function createApp(deps: AppDeps): Express {
     try {
       const tokenResp = await feishu.exchangeCode(code, redirectUri);
       const userInfo = await feishu.getUserInfo(tokenResp.access_token);
+      // 记录飞书实际授予的 scope（仅权限名，不含令牌），用于排查 99991679 类权限问题
+      console.log(`[oauth] ${userInfo.name}(${userInfo.open_id}) 授权 scope: ${tokenResp.scope ?? '(未返回)'}`);
       const userToken = randomToken(32);
       const now = Date.now();
       tokenStore.saveUser(userToken, {

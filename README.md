@@ -38,8 +38,11 @@ GET  /healthz       → 健康检查
    | `im:message:readonly` | 读取消息 |
    | `im:chat:readonly` | 读取群列表（只读） |
    | `im:chat` | 群信息读写 |
-   | `mail:user_mailbox:readonly` | 读取用户邮箱 |
+   | `mail:user_mailbox.folder:read` | 读取邮箱文件夹 |
+   | `mail:user_mailbox.message:readonly` | 读取邮件列表与详情 |
    | `contact:user.id:readonly` | 读取用户 ID（获取用户信息） |
+
+   > 全部加在「**用户身份**」下。授权 URL 会显式携带 scope（不传时飞书只授予 `auth:user.id:read`），因此**新增权限后必须：创建版本并发布 → 用户重新授权**，否则工具调用报 99991679。
 
    > 建议同时开启「获取用户 user ID」类基础权限；若调用时返回 99991672/99991679 等权限错误，按报错提示补开对应权限并重新发布版本。
 4. **版本管理与发布 → 创建版本并发布**（企业自建应用提交后由管理员审核通过即生效）。后续每次改权限都要重新发布。
