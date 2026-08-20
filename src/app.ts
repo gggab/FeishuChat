@@ -88,6 +88,7 @@ export function createApp(deps: AppDeps): Express {
       'im:message:readonly',
       'mail:user_mailbox.folder:read',
       'mail:user_mailbox.message:readonly',
+      'mail:user_mailbox.message:modify',
     ].join(' ');
     const url =
       `${FEISHU_AUTHORIZE_URL}?app_id=${encodeURIComponent(config.appId)}` +

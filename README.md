@@ -40,6 +40,7 @@ GET  /healthz       → 健康检查
    | `im:chat` | 群信息读写 |
    | `mail:user_mailbox.folder:read` | 读取邮箱文件夹 |
    | `mail:user_mailbox.message:readonly` | 读取邮件列表与详情 |
+   | `mail:user_mailbox.message:modify` | 移动邮件到文件夹（batch_modify） |
    | `contact:user.id:readonly` | 读取用户 ID（获取用户信息） |
 
    > 全部加在「**用户身份**」下。授权 URL 会显式携带 scope（不传时飞书只授予 `auth:user.id:read`），因此**新增权限后必须：创建版本并发布 → 用户重新授权**，否则工具调用报 99991679。
@@ -119,7 +120,9 @@ npm run build      # 编译到 dist/
    - `list_chats` 能列出自己加入的群；
    - `list_messages` / `get_message` 能读到群消息；
    - `send_message` / `reply_message` 能发出消息（AI 应先展示内容并请你确认）；
-   - `list_mail_folders` / `list_mail_messages` / `get_mail_message` 能读邮箱（需邮箱权限已发布）。
+   - `list_mail_folders` / `list_mail_messages` / `get_mail_message` 能读邮箱（需邮箱权限已发布；`get_mail_message` 默认 metadata 格式，需要主题/发件人/正文时传 `format: "full"`）；
+   - `search_mail_messages` 能按关键词和 from/to/folder 等条件搜索邮件；
+   - `move_mail_messages` 能把邮件批量移入指定文件夹（AI 应先展示并请你确认）。
 4. 观察 `logs/audit.log` 是否按预期记录调用（无正文、无 token）。
 5. 令牌过期场景：user_access_token 有效期约 2 小时，网关会在距过期 <5 分钟时自动刷新；refresh_token（约 30 天）过期后工具会返回错误，提示重新访问 `/oauth/login` 授权。
 
