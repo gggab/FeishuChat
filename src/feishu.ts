@@ -25,6 +25,13 @@ interface FeishuEnvelope<T> {
   data?: T;
 }
 
+interface TenantTokenResponse {
+  code: number;
+  msg: string;
+  tenant_access_token?: string;
+  expire?: number;
+}
+
 function feishuError(err: unknown, action: string): Error {
   const axiosErr = err as AxiosError<FeishuEnvelope<unknown>>;
   const detail = axiosErr.response?.data
@@ -37,6 +44,8 @@ export class FeishuClient {
   private readonly http: AxiosInstance;
   private readonly appId: string;
   private readonly appSecret: string;
+  private tenantToken: { value: string; expiresAt: number } | null = null;
+  private tenantTokenPromise: Promise<string> | null = null;
 
   constructor(appId: string, appSecret: string, http?: AxiosInstance) {
     this.appId = appId;
@@ -121,6 +130,58 @@ export class FeishuClient {
     } catch (err) {
       if (err instanceof Error && err.message.startsWith('飞书接口返回错误')) throw err;
       throw feishuError(err, action);
+    }
+  }
+
+  /**
+   * 获取 tenant_access_token（应用身份），带内存缓存：距过期 <5 分钟时重新获取。
+   * 并发调用共享同一次换 token 请求。
+   */
+  async getTenantToken(): Promise<string> {
+    if (this.tenantToken && Date.now() < this.tenantToken.expiresAt - 5 * 60_000) {
+      return this.tenantToken.value;
+    }
+    this.tenantTokenPromise ??= this.fetchTenantToken().finally(() => {
+      this.tenantTokenPromise = null;
+    });
+    return this.tenantTokenPromise;
+  }
+
+  private async fetchTenantToken(): Promise<string> {
+    try {
+      const resp = await this.http.post<TenantTokenResponse>('/auth/v3/tenant_access_token/internal', {
+        app_id: this.appId,
+        app_secret: this.appSecret,
+      });
+      if (resp.data.code !== 0 || !resp.data.tenant_access_token) {
+        throw new Error(`code=${resp.data.code} msg=${resp.data.msg}`);
+      }
+      this.tenantToken = {
+        value: resp.data.tenant_access_token,
+        expiresAt: Date.now() + (resp.data.expire ?? 7200) * 1000,
+      };
+      return this.tenantToken.value;
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('code=')) {
+        throw new Error(`飞书接口返回错误（获取 tenant_access_token）：${err.message}`);
+      }
+      throw feishuError(err, '获取 tenant_access_token');
+    }
+  }
+
+  /** 以应用身份向指定群发送 interactive 卡片消息（机器人需在群内） */
+  async sendCardMessage(chatId: string, card: Record<string, unknown>): Promise<void> {
+    const token = await this.getTenantToken();
+    try {
+      const resp = await this.http.post<FeishuEnvelope<unknown>>(
+        '/im/v1/messages?receive_id_type=chat_id',
+        { receive_id: chatId, msg_type: 'interactive', content: JSON.stringify(card) },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      this.unwrap(resp, '发送卡片消息');
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('飞书接口返回错误')) throw err;
+      throw feishuError(err, '发送卡片消息');
     }
   }
 }

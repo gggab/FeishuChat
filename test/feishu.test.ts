@@ -76,4 +76,43 @@ describe('FeishuClient', () => {
       headers: { Authorization: 'Bearer u-at' },
     });
   });
+
+  it('getTenantToken 缓存 token，有效期内不重复请求', async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: { code: 0, msg: 'ok', tenant_access_token: 't-1', expire: 7200 },
+    });
+    const client = new FeishuClient('app-id', 'app-secret', mockHttp({ post }));
+    expect(await client.getTenantToken()).toBe('t-1');
+    expect(await client.getTenantToken()).toBe('t-1');
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith('/auth/v3/tenant_access_token/internal', {
+      app_id: 'app-id',
+      app_secret: 'app-secret',
+    });
+  });
+
+  it('getTenantToken 业务失败时抛错且不缓存', async () => {
+    const post = vi.fn().mockResolvedValue({ data: { code: 10003, msg: 'invalid app_secret' } });
+    const client = new FeishuClient('a', 's', mockHttp({ post }));
+    await expect(client.getTenantToken()).rejects.toThrow(/10003/);
+    // 失败后重试会再次发起请求
+    await expect(client.getTenantToken()).rejects.toThrow(/10003/);
+    expect(post).toHaveBeenCalledTimes(2);
+  });
+
+  it('sendCardMessage 以 tenant token 调 im/v1/messages', async () => {
+    const post = vi
+      .fn()
+      .mockResolvedValueOnce({ data: { code: 0, msg: 'ok', tenant_access_token: 't-1', expire: 7200 } })
+      .mockResolvedValueOnce({ data: { code: 0, msg: 'success', data: {} } });
+    const client = new FeishuClient('a', 's', mockHttp({ post }));
+    const card = { header: { template: 'red', title: { tag: 'plain_text', content: 'x' } }, elements: [] };
+    await client.sendCardMessage('oc_chat1', card);
+    expect(post).toHaveBeenNthCalledWith(
+      2,
+      '/im/v1/messages?receive_id_type=chat_id',
+      { receive_id: 'oc_chat1', msg_type: 'interactive', content: JSON.stringify(card) },
+      { headers: { Authorization: 'Bearer t-1' } },
+    );
+  });
 });

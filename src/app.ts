@@ -7,6 +7,7 @@ import { randomToken } from './crypto.js';
 import { FEISHU_AUTHORIZE_URL, FeishuClient } from './feishu.js';
 import { OAuthStateStore } from './oauthState.js';
 import { RateLimiter } from './rateLimit.js';
+import { buildFeishuCard, parseSentryAlert, verifySentrySignature } from './sentryAlert.js';
 import { ToolContext } from './tools/context.js';
 import { registerImTools } from './tools/im.js';
 import { registerMailTools } from './tools/mail.js';
@@ -58,10 +59,47 @@ export function createApp(deps: AppDeps): Express {
   const app = express();
   const redirectUri = `${config.publicBaseUrl}/oauth/callback`;
 
-  app.use(express.json({ limit: '1mb' }));
+  app.use(
+    express.json({
+      limit: '1mb',
+      // 保留原始请求体：Sentry webhook 验签需要对原文做 HMAC
+      verify: (req, _res, buf) => {
+        (req as typeof req & { rawBody?: Buffer }).rawBody = buf;
+      },
+    }),
+  );
 
   app.get('/healthz', (_req, res) => {
     res.json({ ok: true, uptime: process.uptime() });
+  });
+
+  // Sentry Internal Integration webhook：验签后以应用身份转发告警卡片到飞书群
+  app.post('/webhooks/sentry', async (req, res) => {
+    const { sentryWebhookSecret, feishuAlertChatId } = config;
+    if (!sentryWebhookSecret || !feishuAlertChatId) {
+      res.status(503).json({ ok: false, message: '未配置 SENTRY_WEBHOOK_SECRET / FEISHU_ALERT_CHAT_ID' });
+      return;
+    }
+    const rawBody = (req as typeof req & { rawBody?: Buffer }).rawBody;
+    const signature = req.get('Sentry-Hook-Signature') ?? '';
+    if (!rawBody || !verifySentrySignature(rawBody, signature, sentryWebhookSecret)) {
+      res.status(401).json({ ok: false, message: '签名校验失败' });
+      return;
+    }
+    const resource = req.get('Sentry-Hook-Resource') ?? 'unknown';
+    // 集成被删除 / 安装事件：直接确认，不转发
+    if (resource === 'installation' || resource === 'uninstall') {
+      res.json({ ok: true, skipped: resource });
+      return;
+    }
+    try {
+      await feishu.sendCardMessage(feishuAlertChatId, buildFeishuCard(parseSentryAlert(resource, req.body)));
+      console.log(`[sentry] 已转发告警到飞书群：resource=${resource}`);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('[sentry] 告警转发失败:', err);
+      res.status(502).json({ ok: false, message: (err as Error).message });
+    }
   });
 
   app.get('/', (_req, res) => {
@@ -82,7 +120,9 @@ export function createApp(deps: AppDeps): Express {
     const state = stateStore.generate();
     // 显式声明所需的用户身份 scope：未传 scope 时飞书只授予已发布版本中的权限，
     // 排查权限问题（99991679）时显式声明可以让飞书直接报出缺失的权限名。
+    // offline_access：v2 授权必须显式声明，否则换令牌时不返回 refresh_token（无法自动续期）。
     const scopes = [
+      'offline_access',
       'im:chat:readonly',
       'im:message',
       'im:message:readonly',
@@ -121,6 +161,12 @@ export function createApp(deps: AppDeps): Express {
       const userInfo = await feishu.getUserInfo(tokenResp.access_token);
       // 记录飞书实际授予的 scope（仅权限名，不含令牌），用于排查 99991679 类权限问题
       console.log(`[oauth] ${userInfo.name}(${userInfo.open_id}) 授权 scope: ${tokenResp.scope ?? '(未返回)'}`);
+      if (!tokenResp.refresh_token) {
+        console.warn(
+          `[oauth] 警告：飞书未返回 refresh_token，令牌过期后需重新授权。` +
+            `请确认授权 URL 已携带 offline_access scope。`,
+        );
+      }
       const userToken = randomToken(32);
       const now = Date.now();
       tokenStore.saveUser(userToken, {

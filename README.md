@@ -18,6 +18,8 @@ GET  /oauth/callback→ 校验 state，授权码换 user_access_token + refresh_
                       返回成功页展示个人 MCP URL 和客户端配置 JSON
 ANY  /mcp/:userToken→ MCP Streamable HTTP 端点（无状态模式），按 userToken 找到
                       用户令牌（距过期 <5 分钟自动用 refresh_token 刷新），以该用户身份调飞书 API
+POST /webhooks/sentry→ Sentry Internal Integration webhook：验签后以应用身份把告警
+                      卡片发到指定飞书群（tenant_access_token 自动缓存刷新）
 GET  /healthz       → 健康检查
 ```
 
@@ -103,7 +105,23 @@ docker run -d --name feishu-mcp-gateway \
 3. 把它加入自己 AI 客户端的 MCP 配置（Claude Code 的 `~/.claude.json` / Cursor 的 `mcp.json` / Kimi Code 的 MCP 配置），重启客户端即可。
 4. **注意：该 URL 等同于你的飞书身份凭证，不要分享给他人。** 若泄露，联系管理员删除 `data/tokens.json` 中对应条目并重启（或直接编辑删除该 userToken 条目）。
 
-## 四、开发
+## 四、Sentry 告警接入（可选）
+
+把 Sentry 告警以**当前飞书应用（机器人）身份**推送到飞书群：
+
+1. **飞书侧**：
+   - 确认应用已开启**机器人能力**（开发者后台 → 应用能力 → 机器人），并把机器人拉进目标群；
+   - `im:message` 权限需对**应用身份**生效（如权限只加在「用户身份」下，需在权限管理中补开并重新发布版本）；
+   - 拿到目标群的 `chat_id`（`oc_` 开头，可通过 `list_chats` 工具或 `im/v1/chats` 接口查到），填入 `.env` 的 `FEISHU_ALERT_CHAT_ID`。
+2. **Sentry 侧**：Settings → Developer Settings → New Internal Integration：
+   - Webhook URL 填 `http://<内网IP>:3000/webhooks/sentry`；
+   - 勾选 **Alert Rule Action**（issue 告警）或订阅 **Metric Alert** webhook；
+   - 保存后复制集成的 **Client Secret**，填入 `.env` 的 `SENTRY_WEBHOOK_SECRET`。
+3. 在 Sentry 告警规则（Alerts → Create Alert）的 action 中选择该内部集成即可。
+
+网关用 `Sentry-Hook-Signature`（HMAC-SHA256）验签，伪造请求会被 401 拒绝；两个环境变量任一缺失时端点返回 503，不影响其他功能。发送用的是 `tenant_access_token`（应用身份），网关内缓存、距过期 5 分钟自动重取。
+
+## 五、开发
 
 ```bash
 npm run dev        # tsx 热启动
@@ -112,7 +130,7 @@ npm run typecheck  # 类型检查
 npm run build      # 编译到 dist/
 ```
 
-## 五、端到端联调步骤（需要真实飞书应用后执行）
+## 六、端到端联调步骤（需要真实飞书应用后执行）
 
 1. 按第一节完成飞书应用配置并发布，`.env` 填入真实 `APP_ID` / `APP_SECRET`。
 2. 启动服务后走一遍完整授权流程，确认成功页能拿到 MCP URL。

@@ -8,6 +8,10 @@ export interface AppConfig {
   publicBaseUrl: string;
   dataDir: string;
   logDir: string;
+  /** Sentry Internal Integration 的 Client Secret（webhook 验签），未配置则关闭 /webhooks/sentry */
+  sentryWebhookSecret?: string;
+  /** Sentry 告警转发目标群的 chat_id（应用机器人需已在群内） */
+  feishuAlertChatId?: string;
 }
 
 function requireEnv(name: string): string {
@@ -34,5 +38,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     publicBaseUrl: (env.PUBLIC_BASE_URL ?? `http://127.0.0.1:${env.PORT ?? 3000}`).replace(/\/+$/, ''),
     dataDir: env.DATA_DIR ?? './data',
     logDir: env.LOG_DIR ?? './logs',
+    sentryWebhookSecret: env.SENTRY_WEBHOOK_SECRET,
+    feishuAlertChatId: env.FEISHU_ALERT_CHAT_ID,
   };
 }
