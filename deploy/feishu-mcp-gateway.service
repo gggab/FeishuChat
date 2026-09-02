@@ -1,0 +1,22 @@
+[Unit]
+Description=Feishu MCP Gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 改成实际部署目录
+WorkingDirectory=/opt/feishu-mcp-gateway
+# node 路径用 which node 确认（nvm 安装的话在 ~/.nvm/... 下）
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+# 以非 root 用户运行：该用户需对 WorkingDirectory 下的 data/ 和 logs/ 有写权限
+User=deploy
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=feishu-mcp-gateway
+
+[Install]
+WantedBy=multi-user.target

@@ -65,12 +65,19 @@ cp .env.example .env
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # 填写 APP_ID / APP_SECRET，把 PUBLIC_BASE_URL 改成 http://<内网IP>:3000
 
-# 3. 启动（二选一）
+# 3. 启动（三选一）
 npm start                 # 直接运行
-# 或用 PM2：
+# 用 PM2：
 npm install -g pm2
 pm2 start ecosystem.config.cjs
 pm2 save
+# 或用 systemd（无需装 PM2，Ubuntu 自带）：
+sudo cp deploy/feishu-mcp-gateway.service /etc/systemd/system/
+# 按需修改 Unit 文件中的 WorkingDirectory / ExecStart（node 路径）/ User
+sudo systemctl daemon-reload
+sudo systemctl enable --now feishu-mcp-gateway
+systemctl status feishu-mcp-gateway          # 查看状态
+journalctl -u feishu-mcp-gateway -f          # 跟踪日志
 ```
 
 Docker 方式：
