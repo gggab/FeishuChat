@@ -10,8 +10,10 @@ export interface AppConfig {
   logDir: string;
   /** Sentry Internal Integration 的 Client Secret（webhook 验签），未配置则关闭 /webhooks/sentry */
   sentryWebhookSecret?: string;
-  /** Sentry 告警转发目标群的 chat_id（应用机器人需已在群内） */
+  /** Sentry 告警默认转发群的 chat_id：项目没有专属映射时发到这里；留空则未映射的项目不发送 */
   feishuAlertChatId?: string;
+  /** 管理页面（/admin/sentry-projects）访问口令，未配置则该页面关闭 */
+  adminToken?: string;
 }
 
 function requireEnv(name: string): string {
@@ -40,5 +42,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     logDir: env.LOG_DIR ?? './logs',
     sentryWebhookSecret: env.SENTRY_WEBHOOK_SECRET,
     feishuAlertChatId: env.FEISHU_ALERT_CHAT_ID,
+    adminToken: env.ADMIN_TOKEN,
   };
 }

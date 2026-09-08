@@ -28,6 +28,17 @@ export interface AlertMessage {
   detail?: string;
   /** Sentry 详情页链接 */
   url?: string;
+  /** Sentry 项目数字 ID（字符串形式），用于按项目路由到不同飞书群；取不到则 undefined，走默认群 */
+  projectId?: string;
+  /** Sentry 项目 slug，仅用于展示/自动回填，不参与路由 */
+  projectSlug?: string;
+  /** Sentry 项目名，仅用于展示/自动回填，不参与路由 */
+  projectName?: string;
+}
+
+/** 从 Sentry API URL（形如 .../api/0/projects/<org>/<slug>/...）里取项目 slug */
+function projectSlugFromUrl(url?: string): string | undefined {
+  return String(url ?? '').match(/\/projects\/[^/]+\/([^/]+)\//)?.[1];
 }
 
 /** 把 Sentry webhook 负载解析为通用告警结构（对未知 resource 做兜底） */
@@ -44,6 +55,8 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       ],
       detail: ev.culprit ?? ev.message,
       url: ev.web_url ?? ev.url,
+      projectId: ev.project != null ? String(ev.project) : undefined,
+      projectSlug: projectSlugFromUrl(ev.url),
     };
   }
   if (resource === 'metric_alert') {
@@ -54,7 +67,9 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       color: resolved ? 'green' : 'red',
       fields: [['状态', String(body?.action ?? '-')]],
       detail: body?.data?.description_text ?? body?.data?.description,
-      url: ma.web_url,
+      url: body?.data?.web_url,
+      // metric_alert payload 没有数字项目 ID，只有 slug 数组，无法参与按 ID 路由
+      projectSlug: ma.alert_rule?.projects?.[0],
     };
   }
   if (resource === 'issue') {
@@ -70,13 +85,16 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       ],
       detail: issue.culprit,
       url: issue.web_url,
+      projectId: issue.project?.id != null ? String(issue.project.id) : undefined,
+      projectSlug: issue.project?.slug,
+      projectName: issue.project?.name,
     };
   }
   if (resource === 'error') {
     const err = body?.data?.error ?? {};
     const level = String(err.level ?? 'error').toLowerCase();
-    // error payload 里 project 只是数字 ID，没有名字；从详情 URL 里的 /projects/<org>/<slug>/ 取项目名兜底
-    const projectSlug = String(err.url ?? '').match(/\/projects\/[^/]+\/([^/]+)\//)?.[1];
+    // error payload 里 project 只是数字 ID，没有名字；从详情 URL 里的 /projects/<org>/<slug>/ 取 slug 兜底展示
+    const projectSlug = projectSlugFromUrl(err.url);
     return {
       title: `Sentry 报错：${err.title ?? '(无标题)'}`,
       color: level === 'fatal' || level === 'error' ? 'red' : level === 'warning' ? 'orange' : 'blue',
@@ -86,6 +104,8 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       ],
       detail: err.culprit,
       url: err.web_url,
+      projectId: err.project != null ? String(err.project) : undefined,
+      projectSlug,
     };
   }
   // 未适配精细样式的 resource 类型：先打印完整 payload，方便后续按真实字段补充解析

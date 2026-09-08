@@ -8,6 +8,7 @@ import { FEISHU_AUTHORIZE_URL, FeishuClient } from './feishu.js';
 import { OAuthStateStore } from './oauthState.js';
 import { RateLimiter } from './rateLimit.js';
 import { buildFeishuCard, parseSentryAlert, verifySentrySignature } from './sentryAlert.js';
+import { SentryProjectStore } from './sentryProjectStore.js';
 import { ToolContext } from './tools/context.js';
 import { registerCalendarTools } from './tools/calendar.js';
 import { registerImTools } from './tools/im.js';
@@ -21,6 +22,7 @@ export interface AppDeps {
   stateStore: OAuthStateStore;
   audit: AuditLogger;
   rateLimiter: RateLimiter;
+  sentryProjectStore: SentryProjectStore;
 }
 
 function escapeHtml(s: string): string {
@@ -56,7 +58,7 @@ ${body}
 }
 
 export function createApp(deps: AppDeps): Express {
-  const { config, feishu, tokenStore, stateStore, audit, rateLimiter } = deps;
+  const { config, feishu, tokenStore, stateStore, audit, rateLimiter, sentryProjectStore } = deps;
   const app = express();
   const redirectUri = `${config.publicBaseUrl}/oauth/callback`;
 
@@ -77,8 +79,8 @@ export function createApp(deps: AppDeps): Express {
   // Sentry Internal Integration webhook：验签后以应用身份转发告警卡片到飞书群
   app.post('/webhooks/sentry', async (req, res) => {
     const { sentryWebhookSecret, feishuAlertChatId } = config;
-    if (!sentryWebhookSecret || !feishuAlertChatId) {
-      res.status(503).json({ ok: false, message: '未配置 SENTRY_WEBHOOK_SECRET / FEISHU_ALERT_CHAT_ID' });
+    if (!sentryWebhookSecret) {
+      res.status(503).json({ ok: false, message: '未配置 SENTRY_WEBHOOK_SECRET' });
       return;
     }
     const rawBody = (req as typeof req & { rawBody?: Buffer }).rawBody;
@@ -93,14 +95,140 @@ export function createApp(deps: AppDeps): Express {
       res.json({ ok: true, skipped: resource });
       return;
     }
+    const alert = parseSentryAlert(resource, req.body);
+    // 项目已配了专属映射就发到对应群，否则退回默认群（.env 里的 FEISHU_ALERT_CHAT_ID）；两者都没有就不发
+    const projectMapping = alert.projectId ? sentryProjectStore.get(alert.projectId) : undefined;
+    const chatId = projectMapping?.chatId || feishuAlertChatId;
+    // 收到真实告警时，为已存在的项目映射自动回填 slug/name，方便管理页面展示
+    if (alert.projectId && (alert.projectSlug || alert.projectName)) {
+      sentryProjectStore.enrich(alert.projectId, { slug: alert.projectSlug, name: alert.projectName });
+    }
+    if (!chatId) {
+      console.log(`[sentry] 未找到可用的飞书群（项目=${alert.projectId ?? '-'} 且默认群未配置），跳过发送`);
+      res.json({ ok: true, skipped: 'no_chat_id' });
+      return;
+    }
     try {
-      await feishu.sendCardMessage(feishuAlertChatId, buildFeishuCard(parseSentryAlert(resource, req.body)));
-      console.log(`[sentry] 已转发告警到飞书群：resource=${resource}`);
+      await feishu.sendCardMessage(chatId, buildFeishuCard(alert));
+      console.log(`[sentry] 已转发告警到飞书群：resource=${resource} project=${alert.projectId ?? '-'} chatId=${chatId}`);
       res.json({ ok: true });
     } catch (err) {
-      console.error('[sentry] 告警转发失败:', err);
-      res.status(502).json({ ok: false, message: (err as Error).message });
+      // 目标群不存在/机器人不在群里等发送失败，不当作网关故障处理（避免 Sentry 重试风暴），仅记录日志后跳过
+      console.error(`[sentry] 发送到群 ${chatId} 失败，跳过：`, err);
+      res.json({ ok: true, skipped: 'send_failed' });
     }
+  });
+
+  // 管理页面鉴权：query ?token= 或 X-Admin-Token 头，任一匹配 ADMIN_TOKEN 即可
+  function checkAdminToken(req: express.Request): boolean {
+    if (!config.adminToken) return false;
+    const token = (req.query.token as string | undefined) ?? req.get('X-Admin-Token') ?? '';
+    return token === config.adminToken;
+  }
+
+  // Sentry 项目 → 飞书群映射管理页（新增/删除；slug、项目名收到该项目真实告警后自动回填）
+  app.get('/admin/sentry-projects', (req, res) => {
+    if (!config.adminToken) {
+      res.status(503).send(page('未开放', '<h1>未开放</h1><p class="warn">未配置 ADMIN_TOKEN，管理页面已关闭。</p>'));
+      return;
+    }
+    if (!checkAdminToken(req)) {
+      res
+        .status(401)
+        .send(page('需要口令', '<h1>需要访问口令</h1><p>请在链接后加上 <code>?token=你的ADMIN_TOKEN</code> 后重新访问。</p>'));
+      return;
+    }
+    const token = req.query.token as string;
+    res.send(
+      page(
+        'Sentry 项目路由',
+        `<h1>Sentry 项目 → 飞书群映射</h1>
+<div class="card">
+  <p>项目 ID 是 Sentry 里的数字项目 ID；slug / 项目名会在该项目产生第一条真实告警后自动回填，新增时不用填。</p>
+  <table id="tbl" style="width:100%; border-collapse: collapse;">
+    <thead><tr>
+      <th style="text-align:left; border-bottom:1px solid #dee0e3; padding:6px;">项目 ID</th>
+      <th style="text-align:left; border-bottom:1px solid #dee0e3; padding:6px;">项目名 / slug</th>
+      <th style="text-align:left; border-bottom:1px solid #dee0e3; padding:6px;">飞书群 chat_id</th>
+      <th style="border-bottom:1px solid #dee0e3; padding:6px;"></th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+<div class="card">
+  <p>新增映射：</p>
+  <p>
+    <input id="pid" placeholder="Sentry 项目 ID，如 4" style="padding:6px; margin-right:8px;">
+    <input id="cid" placeholder="飞书群 chat_id，oc_ 开头" style="padding:6px; width:280px; margin-right:8px;">
+    <button id="add" class="btn" style="padding:8px 20px;">新增</button>
+  </p>
+</div>
+<script>
+const TOKEN = ${JSON.stringify(token)};
+async function api(path, opts) {
+  const resp = await fetch(path, { ...opts, headers: { ...(opts && opts.headers), 'X-Admin-Token': TOKEN, 'Content-Type': 'application/json' } });
+  if (!resp.ok) throw new Error('请求失败：' + resp.status);
+  return resp.json();
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function refresh() {
+  const list = await api('/admin/sentry-projects/api');
+  document.getElementById('rows').innerHTML = list.map(r =>
+    '<tr>' +
+    '<td style="padding:6px; border-bottom:1px solid #f0f0f0;">' + esc(r.projectId) + '</td>' +
+    '<td style="padding:6px; border-bottom:1px solid #f0f0f0;">' + (esc(r.name) || esc(r.slug) || '<span style="color:#999">（等待第一条告警）</span>') + '</td>' +
+    '<td style="padding:6px; border-bottom:1px solid #f0f0f0;"><code>' + esc(r.chatId) + '</code></td>' +
+    '<td style="padding:6px; border-bottom:1px solid #f0f0f0;"><button data-id="' + esc(r.projectId) + '" class="del">删除</button></td>' +
+    '</tr>'
+  ).join('') || '<tr><td colspan="4" style="padding:12px; color:#999;">暂无映射，未映射的项目会发到默认群</td></tr>';
+  document.querySelectorAll('.del').forEach(btn => btn.onclick = async () => {
+    if (!confirm('删除项目 ' + btn.dataset.id + ' 的映射？')) return;
+    await api('/admin/sentry-projects/api/' + encodeURIComponent(btn.dataset.id), { method: 'DELETE' });
+    refresh();
+  });
+}
+document.getElementById('add').onclick = async () => {
+  const projectId = document.getElementById('pid').value.trim();
+  const chatId = document.getElementById('cid').value.trim();
+  if (!projectId || !chatId) { alert('项目 ID 和 chat_id 都要填'); return; }
+  await api('/admin/sentry-projects/api', { method: 'POST', body: JSON.stringify({ projectId, chatId }) });
+  document.getElementById('pid').value = '';
+  document.getElementById('cid').value = '';
+  refresh();
+};
+refresh();
+</script>`,
+      ),
+    );
+  });
+
+  app.get('/admin/sentry-projects/api', (req, res) => {
+    if (!checkAdminToken(req)) {
+      res.status(401).json({ ok: false, message: '口令错误或未配置 ADMIN_TOKEN' });
+      return;
+    }
+    res.json(sentryProjectStore.list());
+  });
+
+  app.post('/admin/sentry-projects/api', (req, res) => {
+    if (!checkAdminToken(req)) {
+      res.status(401).json({ ok: false, message: '口令错误或未配置 ADMIN_TOKEN' });
+      return;
+    }
+    const { projectId, chatId } = req.body ?? {};
+    if (!projectId || !chatId || typeof projectId !== 'string' || typeof chatId !== 'string') {
+      res.status(400).json({ ok: false, message: '需要 projectId 和 chatId（均为字符串）' });
+      return;
+    }
+    res.json({ ok: true, record: sentryProjectStore.upsert(projectId.trim(), chatId.trim()) });
+  });
+
+  app.delete('/admin/sentry-projects/api/:projectId', (req, res) => {
+    if (!checkAdminToken(req)) {
+      res.status(401).json({ ok: false, message: '口令错误或未配置 ADMIN_TOKEN' });
+      return;
+    }
+    res.json({ ok: sentryProjectStore.remove(req.params.projectId) });
   });
 
   app.get('/', (_req, res) => {

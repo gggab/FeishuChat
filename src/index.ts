@@ -5,6 +5,7 @@ import { loadConfig } from './config.js';
 import { FeishuClient } from './feishu.js';
 import { OAuthStateStore } from './oauthState.js';
 import { RateLimiter } from './rateLimit.js';
+import { SentryProjectStore } from './sentryProjectStore.js';
 import { TokenStore } from './tokenStore.js';
 
 const config = loadConfig();
@@ -24,6 +25,8 @@ const tokenStore = new TokenStore({
   },
 });
 
+const sentryProjectStore = new SentryProjectStore(path.join(config.dataDir, 'sentryProjects.json'));
+
 const app = createApp({
   config,
   feishu,
@@ -31,6 +34,7 @@ const app = createApp({
   stateStore: new OAuthStateStore(),
   audit: new AuditLogger(config.logDir),
   rateLimiter: new RateLimiter(60, 60_000),
+  sentryProjectStore,
 });
 
 app.listen(config.port, () => {

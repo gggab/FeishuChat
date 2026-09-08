@@ -128,7 +128,16 @@ docker run -d --name feishu-mcp-gateway \
    - 保存后复制集成的 **Client Secret**，填入 `.env` 的 `SENTRY_WEBHOOK_SECRET`。
 3. 在 Sentry 告警规则（Alerts → Create Alert）的 action 中选择该内部集成即可。
 
-网关用 `Sentry-Hook-Signature`（HMAC-SHA256）验签，伪造请求会被 401 拒绝；两个环境变量任一缺失时端点返回 503，不影响其他功能。发送用的是 `tenant_access_token`（应用身份），网关内缓存、距过期 5 分钟自动重取。
+网关用 `Sentry-Hook-Signature`（HMAC-SHA256）验签，伪造请求会被 401 拒绝；`SENTRY_WEBHOOK_SECRET` 缺失时端点整体返回 503，不影响其他功能。发送用的是 `tenant_access_token`（应用身份），网关内缓存、距过期 5 分钟自动重取。
+
+**按项目路由到不同群（可选）**：访问 `http://<网关地址>:3000/admin/sentry-projects?token=<ADMIN_TOKEN>`（先在 `.env` 配好 `ADMIN_TOKEN`）管理"项目 → 群"映射：
+
+- 新增映射只需填 **Sentry 项目 ID**(数字，Sentry 项目设置页能看到) 和目标群 `chat_id`；
+- 项目名 / slug 不用手填，会在**该项目第一次真实告警到达后自动回填**，方便核对填的项目 ID 对不对；
+- 命中映射的项目发到对应群；没配映射的项目发到 `.env` 的 `FEISHU_ALERT_CHAT_ID` 默认群；如果默认群也没配（留空），未映射项目的告警会被跳过、不发送；
+- 目标群不存在 / 机器人不在群里导致发送失败时，也只是记日志跳过，不会当作网关故障返回错误（避免 Sentry 触发重试风暴）。
+
+`metric_alert` 类型的 payload 没有数字项目 ID，无法参与按项目路由，始终发到默认群。
 
 ## 五、开发
 

@@ -17,6 +17,7 @@ import {
   parseSentryAlert,
   verifySentrySignature,
 } from '../src/sentryAlert.js';
+import { SentryProjectStore } from '../src/sentryProjectStore.js';
 import { TokenStore } from '../src/tokenStore.js';
 
 const KEY = 'd'.repeat(64);
@@ -79,9 +80,30 @@ describe('parseSentryAlert', () => {
   });
 
   it('未知 resource 走兜底结构', () => {
-    const msg = parseSentryAlert('error', { action: 'created' });
-    expect(msg.title).toContain('error');
+    const msg = parseSentryAlert('comment', { action: 'created' });
+    expect(msg.title).toContain('comment');
     expect(msg.color).toBe('grey');
+  });
+
+  it('error：提取标题、级别、详情链接，并从 URL 兜底取项目 slug', () => {
+    const msg = parseSentryAlert('error', {
+      action: 'created',
+      data: {
+        error: {
+          title: 'ReferenceError: x is not defined',
+          level: 'error',
+          culprit: 'poll(views.js)',
+          project: 4,
+          url: 'https://sentry.example.com/api/0/projects/org/my-project/events/1/',
+          web_url: 'https://sentry.example.com/organizations/org/issues/1/events/1/',
+        },
+      },
+    });
+    expect(msg.title).toContain('ReferenceError');
+    expect(msg.color).toBe('red');
+    expect(msg.projectId).toBe('4');
+    expect(msg.projectSlug).toBe('my-project');
+    expect(msg.url).toBe('https://sentry.example.com/organizations/org/issues/1/events/1/');
   });
 });
 
@@ -132,6 +154,7 @@ describe('POST /webhooks/sentry', () => {
       stateStore: new OAuthStateStore(),
       audit: new AuditLogger(dir),
       rateLimiter: new RateLimiter(60, 60_000),
+      sentryProjectStore: new SentryProjectStore(path.join(dir, 'sentryProjects.json')),
     });
   }
 
@@ -192,7 +215,7 @@ describe('POST /webhooks/sentry', () => {
     expect(options.headers.Authorization).toBe('Bearer t-1');
   });
 
-  it('飞书发送失败时返回 502', async () => {
+  it('飞书发送失败（如群不存在/机器人不在群）时跳过而非报故障', async () => {
     feishuPost.mockImplementation((url: string) => {
       if (url === '/auth/v3/tenant_access_token/internal') {
         return Promise.resolve({ data: { code: 0, msg: 'ok', tenant_access_token: 't-1', expire: 7200 } });
@@ -200,9 +223,34 @@ describe('POST /webhooks/sentry', () => {
       return Promise.resolve({ data: { code: 230001, msg: 'bot is not in the chat' } });
     });
     const resp = await postAlert(alertBody, sign(alertBody));
-    expect(resp.status).toBe(502);
+    expect(resp.status).toBe(200);
     const body = await resp.json();
-    expect(body.message).toContain('230001');
+    expect(body.ok).toBe(true);
+    expect(body.skipped).toBe('send_failed');
+  });
+
+  it('未映射项目且默认群为空时跳过发送', async () => {
+    const noDefault: AppConfig = { ...config, feishuAlertChatId: undefined };
+    const noDefaultServer = createServer(buildTestApp(noDefault));
+    await new Promise<void>((resolve) => noDefaultServer.listen(0, '127.0.0.1', resolve));
+    const noDefaultBase = `http://127.0.0.1:${(noDefaultServer.address() as AddressInfo).port}`;
+    try {
+      const resp = await fetch(`${noDefaultBase}/webhooks/sentry`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Sentry-Hook-Signature': sign(alertBody),
+          'Sentry-Hook-Resource': 'event_alert',
+        },
+        body: alertBody,
+      });
+      expect(resp.status).toBe(200);
+      const body = await resp.json();
+      expect(body.skipped).toBe('no_chat_id');
+      expect(feishuPost).not.toHaveBeenCalled();
+    } finally {
+      await new Promise<void>((resolve) => noDefaultServer.close(() => resolve()));
+    }
   });
 
   it('签名错误返回 401，不调用飞书接口', async () => {
