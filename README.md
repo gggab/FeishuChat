@@ -44,6 +44,8 @@ GET  /healthz       → 健康检查
    | `mail:user_mailbox.message:readonly` | 读取邮件列表与详情 |
    | `mail:user_mailbox.message:modify` | 移动邮件到文件夹（batch_modify） |
    | `contact:user.id:readonly` | 读取用户 ID（获取用户信息） |
+   | `calendar:calendar:readonly` | 读取用户主日历 |
+   | `calendar:calendar.event:read` | 读取用户日程（list_calendar_events） |
 
    > 全部加在「**用户身份**」下。授权 URL 会显式携带 scope（不传时飞书只授予 `auth:user.id:read`），因此**新增权限后必须：创建版本并发布 → 用户重新授权**，否则工具调用报 99991679。
 

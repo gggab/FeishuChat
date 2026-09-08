@@ -9,6 +9,7 @@ import { OAuthStateStore } from './oauthState.js';
 import { RateLimiter } from './rateLimit.js';
 import { buildFeishuCard, parseSentryAlert, verifySentrySignature } from './sentryAlert.js';
 import { ToolContext } from './tools/context.js';
+import { registerCalendarTools } from './tools/calendar.js';
 import { registerImTools } from './tools/im.js';
 import { registerMailTools } from './tools/mail.js';
 import { TokenStore } from './tokenStore.js';
@@ -129,6 +130,8 @@ export function createApp(deps: AppDeps): Express {
       'mail:user_mailbox.folder:read',
       'mail:user_mailbox.message:readonly',
       'mail:user_mailbox.message:modify',
+      'calendar:calendar:readonly',
+      'calendar:calendar.event:read',
     ].join(' ');
     const url =
       `${FEISHU_AUTHORIZE_URL}?app_id=${encodeURIComponent(config.appId)}` +
@@ -234,6 +237,7 @@ export function createApp(deps: AppDeps): Express {
     );
     registerImTools(mcpServer, ctx);
     registerMailTools(mcpServer, ctx);
+    registerCalendarTools(mcpServer, ctx);
 
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     res.on('close', () => {
