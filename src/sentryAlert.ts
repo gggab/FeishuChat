@@ -72,6 +72,22 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       url: issue.web_url,
     };
   }
+  if (resource === 'error') {
+    const err = body?.data?.error ?? {};
+    const level = String(err.level ?? 'error').toLowerCase();
+    // error payload 里 project 只是数字 ID，没有名字；从详情 URL 里的 /projects/<org>/<slug>/ 取项目名兜底
+    const projectSlug = String(err.url ?? '').match(/\/projects\/[^/]+\/([^/]+)\//)?.[1];
+    return {
+      title: `Sentry 报错：${err.title ?? '(无标题)'}`,
+      color: level === 'fatal' || level === 'error' ? 'red' : level === 'warning' ? 'orange' : 'blue',
+      fields: [
+        ['级别', level],
+        ['项目', projectSlug ?? String(err.project ?? '-')],
+      ],
+      detail: err.culprit,
+      url: err.web_url,
+    };
+  }
   // 未适配精细样式的 resource 类型：先打印完整 payload，方便后续按真实字段补充解析
   console.log(`[sentry] 未识别的 resource=${resource}，原始 payload：${JSON.stringify(body)}`);
   return {
