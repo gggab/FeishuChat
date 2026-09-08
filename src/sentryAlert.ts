@@ -59,17 +59,21 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
   }
   if (resource === 'issue') {
     const issue = body?.data?.issue ?? {};
+    const action = String(body?.action ?? '-');
     return {
       title: `Sentry Issue：${issue.title ?? '(无标题)'}`,
-      color: issue.level === 'warning' ? 'orange' : 'red',
+      color: action === 'resolved' ? 'green' : issue.level === 'warning' ? 'orange' : 'red',
       fields: [
-        ['动作', String(body?.action ?? '-')],
+        ['动作', action],
         ['级别', String(issue.level ?? '-')],
+        ['项目', String(issue.project?.name ?? '-')],
       ],
       detail: issue.culprit,
       url: issue.web_url,
     };
   }
+  // 未适配精细样式的 resource 类型：先打印完整 payload，方便后续按真实字段补充解析
+  console.log(`[sentry] 未识别的 resource=${resource}，原始 payload：${JSON.stringify(body)}`);
   return {
     title: `Sentry 通知（${resource}）`,
     color: 'grey',
