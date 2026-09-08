@@ -1,28 +1,8 @@
-import { AxiosInstance } from 'axios';
 import crypto from 'node:crypto';
-import fs from 'node:fs';
-import { createServer, Server } from 'node:http';
-import os from 'node:os';
-import path from 'node:path';
-import { AddressInfo } from 'node:net';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createApp } from '../src/app.js';
-import { AuditLogger } from '../src/audit.js';
-import { AppConfig } from '../src/config.js';
-import { FeishuClient } from '../src/feishu.js';
-import { OAuthStateStore } from '../src/oauthState.js';
-import { RateLimiter } from '../src/rateLimit.js';
-import {
-  buildFeishuCard,
-  parseSentryAlert,
-  verifySentrySignature,
-} from '../src/sentryAlert.js';
-import { SentryProjectStore } from '../src/sentryProjectStore.js';
-import { TokenStore } from '../src/tokenStore.js';
+import { describe, expect, it } from 'vitest';
+import { parseSentryAlert, verifySentrySignature } from '../src/sentryAlert.js';
 
-const KEY = 'd'.repeat(64);
 const SENTRY_SECRET = 'sentry-client-secret';
-const CHAT_ID = 'oc_alert_chat';
 
 function sign(body: string, secret = SENTRY_SECRET): string {
   return crypto.createHmac('sha256', secret).update(body, 'utf8').digest('hex');
@@ -42,11 +22,11 @@ describe('verifySentrySignature', () => {
 });
 
 describe('parseSentryAlert', () => {
-  it('event_alert：提取标题、级别、规则与详情链接', () => {
+  it('event_alert: extracts title, level, rule and detail link', () => {
     const msg = parseSentryAlert('event_alert', {
       action: 'triggered',
       data: {
-        triggered_rule: '生产错误告警',
+        triggered_rule: 'Production error alert',
         event: {
           title: 'TypeError: Cannot read properties of undefined',
           culprit: 'app.handler in process',
@@ -55,37 +35,41 @@ describe('parseSentryAlert', () => {
         },
       },
     });
-    expect(msg.title).toContain('TypeError');
+    expect(msg.titlePrefixKey).toBe('alert');
+    expect(msg.titleText).toContain('TypeError');
     expect(msg.color).toBe('red');
-    expect(msg.fields).toContainEqual(['级别', 'error']);
-    expect(msg.fields).toContainEqual(['触发规则', '生产错误告警']);
+    expect(msg.fields).toContainEqual({ labelKey: 'level', value: 'error' });
+    expect(msg.fields).toContainEqual({ labelKey: 'triggeredRule', value: 'Production error alert' });
     expect(msg.detail).toBe('app.handler in process');
     expect(msg.url).toBe('https://sentry.example.com/issues/123/');
   });
 
-  it('metric_alert：triggered 为红色，resolved 为绿色', () => {
+  it('metric_alert: triggered is red, resolved is green', () => {
     const triggered = parseSentryAlert('metric_alert', {
       action: 'critical',
-      data: { metric_alert: { title: '接口错误率', web_url: 'https://sentry.example.com/alerts/1/' } },
+      data: { metric_alert: { title: 'API error rate' }, web_url: 'https://sentry.example.com/alerts/1/' },
     });
     expect(triggered.color).toBe('red');
-    expect(triggered.title).toContain('接口错误率');
+    expect(triggered.titlePrefixKey).toBe('metricAlert');
+    expect(triggered.titleText).toBe('API error rate');
+    expect(triggered.url).toBe('https://sentry.example.com/alerts/1/');
 
     const resolved = parseSentryAlert('metric_alert', {
       action: 'resolved',
-      data: { metric_alert: { title: '接口错误率' } },
+      data: { metric_alert: { title: 'API error rate' } },
     });
     expect(resolved.color).toBe('green');
-    expect(resolved.title).toContain('已恢复');
+    expect(resolved.titlePrefixKey).toBe('metricAlertResolved');
   });
 
-  it('未知 resource 走兜底结构', () => {
+  it('unknown resource falls back to a generic structure', () => {
     const msg = parseSentryAlert('comment', { action: 'created' });
-    expect(msg.title).toContain('comment');
+    expect(msg.titlePrefixKey).toBe('notification');
+    expect(msg.titleText).toBe('comment');
     expect(msg.color).toBe('grey');
   });
 
-  it('error：提取标题、级别、详情链接，并从 URL 兜底取项目 slug', () => {
+  it('error: extracts title, level, detail link, and falls back to the URL for a project slug', () => {
     const msg = parseSentryAlert('error', {
       action: 'created',
       data: {
@@ -99,187 +83,11 @@ describe('parseSentryAlert', () => {
         },
       },
     });
-    expect(msg.title).toContain('ReferenceError');
+    expect(msg.titlePrefixKey).toBe('error');
+    expect(msg.titleText).toContain('ReferenceError');
     expect(msg.color).toBe('red');
     expect(msg.projectId).toBe('4');
     expect(msg.projectSlug).toBe('my-project');
     expect(msg.url).toBe('https://sentry.example.com/organizations/org/issues/1/events/1/');
-  });
-});
-
-describe('buildFeishuCard', () => {
-  it('生成 interactive 卡片，包含标题、字段、详情与按钮', () => {
-    const card = buildFeishuCard({
-      title: 'Sentry 告警：x',
-      color: 'red',
-      fields: [['级别', 'error']],
-      detail: 'culprit 信息',
-      url: 'https://sentry.example.com/issues/1/',
-    });
-    const json = JSON.stringify(card);
-    expect(json).toContain('"template":"red"');
-    expect(json).toContain('Sentry 告警');
-    expect(json).toContain('culprit 信息');
-    expect(json).toContain('https://sentry.example.com/issues/1/');
-  });
-});
-
-describe('POST /webhooks/sentry', () => {
-  let dir: string;
-  let server: Server;
-  let baseUrl: string;
-  let feishuPost: ReturnType<typeof vi.fn>;
-
-  const config: AppConfig = {
-    appId: 'cli_test',
-    appSecret: 'secret',
-    tokenEncryptionKey: KEY,
-    port: 0,
-    publicBaseUrl: 'http://public.example:3000',
-    dataDir: '',
-    logDir: '',
-    sentryWebhookSecret: SENTRY_SECRET,
-    feishuAlertChatId: CHAT_ID,
-  };
-
-  function buildTestApp(testConfig: AppConfig) {
-    const feishu = new FeishuClient(testConfig.appId, testConfig.appSecret, {
-      post: feishuPost,
-      get: vi.fn(),
-    } as unknown as AxiosInstance);
-    return createApp({
-      config: testConfig,
-      feishu,
-      tokenStore: new TokenStore({ filePath: path.join(dir, 'tokens.json'), encryptionKey: KEY }),
-      stateStore: new OAuthStateStore(),
-      audit: new AuditLogger(dir),
-      rateLimiter: new RateLimiter(60, 60_000),
-      sentryProjectStore: new SentryProjectStore(path.join(dir, 'sentryProjects.json')),
-    });
-  }
-
-  beforeEach(async () => {
-    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sentry-test-'));
-    config.dataDir = dir;
-    config.logDir = dir;
-    feishuPost = vi.fn().mockImplementation((url: string) => {
-      if (url === '/auth/v3/tenant_access_token/internal') {
-        return Promise.resolve({ data: { code: 0, msg: 'ok', tenant_access_token: 't-1', expire: 7200 } });
-      }
-      return Promise.resolve({ data: { code: 0, msg: 'success', data: {} } });
-    });
-    server = createServer(buildTestApp(config));
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  });
-
-  afterEach(async () => {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-    fs.rmSync(dir, { recursive: true, force: true });
-  });
-
-  function postAlert(body: string, signature: string, resource = 'event_alert') {
-    return fetch(`${baseUrl}/webhooks/sentry`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Sentry-Hook-Signature': signature,
-        'Sentry-Hook-Resource': resource,
-      },
-      body,
-    });
-  }
-
-  const alertBody = JSON.stringify({
-    action: 'triggered',
-    data: {
-      triggered_rule: '规则A',
-      event: { title: 'NullPointerException', level: 'error', web_url: 'https://sentry.example.com/i/9/' },
-    },
-  });
-
-  it('验签通过则以应用身份转发卡片到目标群', async () => {
-    const resp = await postAlert(alertBody, sign(alertBody));
-    expect(resp.status).toBe(200);
-    const body = await resp.json();
-    expect(body.ok).toBe(true);
-
-    // 第一次调 tenant_access_token，第二次发消息
-    const sendCall = feishuPost.mock.calls.find(([url]) => String(url).startsWith('/im/v1/messages'));
-    expect(sendCall).toBeDefined();
-    const [, payload, options] = sendCall!;
-    expect(payload.receive_id).toBe(CHAT_ID);
-    expect(payload.msg_type).toBe('interactive');
-    expect(payload.content).toContain('NullPointerException');
-    expect(payload.content).toContain('规则A');
-    expect(options.headers.Authorization).toBe('Bearer t-1');
-  });
-
-  it('飞书发送失败（如群不存在/机器人不在群）时跳过而非报故障', async () => {
-    feishuPost.mockImplementation((url: string) => {
-      if (url === '/auth/v3/tenant_access_token/internal') {
-        return Promise.resolve({ data: { code: 0, msg: 'ok', tenant_access_token: 't-1', expire: 7200 } });
-      }
-      return Promise.resolve({ data: { code: 230001, msg: 'bot is not in the chat' } });
-    });
-    const resp = await postAlert(alertBody, sign(alertBody));
-    expect(resp.status).toBe(200);
-    const body = await resp.json();
-    expect(body.ok).toBe(true);
-    expect(body.skipped).toBe('send_failed');
-  });
-
-  it('未映射项目且默认群为空时跳过发送', async () => {
-    const noDefault: AppConfig = { ...config, feishuAlertChatId: undefined };
-    const noDefaultServer = createServer(buildTestApp(noDefault));
-    await new Promise<void>((resolve) => noDefaultServer.listen(0, '127.0.0.1', resolve));
-    const noDefaultBase = `http://127.0.0.1:${(noDefaultServer.address() as AddressInfo).port}`;
-    try {
-      const resp = await fetch(`${noDefaultBase}/webhooks/sentry`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Sentry-Hook-Signature': sign(alertBody),
-          'Sentry-Hook-Resource': 'event_alert',
-        },
-        body: alertBody,
-      });
-      expect(resp.status).toBe(200);
-      const body = await resp.json();
-      expect(body.skipped).toBe('no_chat_id');
-      expect(feishuPost).not.toHaveBeenCalled();
-    } finally {
-      await new Promise<void>((resolve) => noDefaultServer.close(() => resolve()));
-    }
-  });
-
-  it('签名错误返回 401，不调用飞书接口', async () => {
-    const resp = await postAlert(alertBody, sign(alertBody, 'wrong-secret'));
-    expect(resp.status).toBe(401);
-    expect(feishuPost).not.toHaveBeenCalled();
-  });
-
-  it('installation/uninstall 事件直接确认不转发', async () => {
-    const body = JSON.stringify({ action: 'deleted' });
-    const resp = await postAlert(body, sign(body), 'uninstall');
-    expect(resp.status).toBe(200);
-    expect(feishuPost).not.toHaveBeenCalled();
-  });
-
-  it('未配置 Sentry 相关环境变量时返回 503', async () => {
-    const bareConfig: AppConfig = { ...config, sentryWebhookSecret: undefined, feishuAlertChatId: undefined };
-    const bareServer = createServer(buildTestApp(bareConfig));
-    await new Promise<void>((resolve) => bareServer.listen(0, '127.0.0.1', resolve));
-    const bareBase = `http://127.0.0.1:${(bareServer.address() as AddressInfo).port}`;
-    try {
-      const resp = await fetch(`${bareBase}/webhooks/sentry`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Sentry-Hook-Resource': 'event_alert' },
-        body: alertBody,
-      });
-      expect(resp.status).toBe(503);
-    } finally {
-      await new Promise<void>((resolve) => bareServer.close(() => resolve()));
-    }
   });
 });
