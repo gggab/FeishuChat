@@ -230,8 +230,13 @@ function boldTextLine(content: string): Record<string, unknown> {
   return { tag: 'div', text: { tag: 'lark_md', content: `**${escapeLarkMd(content)}**` } };
 }
 
+/** Label suffixed with ":" — with no color available to set field labels apart (see boldTextLine above), the colon is the substitute visual cue. */
+function fieldLabel(field: AlertField, locale: Locale): string {
+  return `${FIELD_LABELS[field.labelKey][locale]}:`;
+}
+
 function fieldLine(field: AlertField, locale: Locale): Record<string, unknown> {
-  return textLine(`${FIELD_LABELS[field.labelKey][locale]}\n${fieldValueDisplay(field, locale)}`);
+  return textLine(`${fieldLabel(field, locale)}\n${fieldValueDisplay(field, locale)}`);
 }
 
 /** Build a Feishu interactive card with native i18n (viewer's Feishu client language picks the matching content) */
@@ -260,7 +265,7 @@ export function buildFeishuCard(msg: AlertMessage): Record<string, unknown> {
           tag: 'div',
           fields: block.fields.map((f) => ({
             is_short: true,
-            text: { tag: 'plain_text', content: `${FIELD_LABELS[f.labelKey][locale]}\n${fieldValueDisplay(f, locale)}` },
+            text: { tag: 'plain_text', content: `${fieldLabel(f, locale)}\n${fieldValueDisplay(f, locale)}` },
           })),
         });
       }

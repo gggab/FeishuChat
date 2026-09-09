@@ -28,16 +28,16 @@ describe('buildFeishuCard', () => {
     expect(zh[1]).toEqual({ tag: 'div', text: { tag: 'lark_md', content: "**TypeError: Cannot read properties of undefined (reading 'x')**" } });
     expect(zh[2]).toEqual({
       tag: 'div',
-      fields: [{ is_short: true, text: { tag: 'plain_text', content: '级别\nerror' } }],
+      fields: [{ is_short: true, text: { tag: 'plain_text', content: '级别:\nerror' } }],
     });
-    expect(zh[3]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '定位线索\nScreen' } });
+    expect(zh[3]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '定位线索:\nScreen' } });
     expect(zh[4]).toEqual({ tag: 'hr' });
     expect(zh[5]).toEqual({
       tag: 'action',
       actions: [{ tag: 'button', text: { tag: 'plain_text', content: '查看详情' }, type: 'default', url: 'https://sentry.example.com/issues/1/' }],
     });
-    expect(en[2].fields[0].text.content).toBe('Level\nerror');
-    expect(en[3].text.content).toBe('Location hint\nScreen');
+    expect(en[2].fields[0].text.content).toBe('Level:\nerror');
+    expect(en[3].text.content).toBe('Location hint:\nScreen');
     expect(en[5].actions[0].text.content).toBe('View details');
     // no leftover single-language shape
     expect(card).not.toHaveProperty('elements');
@@ -97,15 +97,15 @@ describe('buildFeishuCard', () => {
       color: 'red',
       blocks: [{ kind: 'short', fields: [{ labelKey: 'action', value: 'created' }] }],
     });
-    expect((known.i18n_elements as any).zh_cn.at(-1).fields[0].text.content).toBe('动作\n已创建');
-    expect((known.i18n_elements as any).en_us.at(-1).fields[0].text.content).toBe('Action\nCreated');
+    expect((known.i18n_elements as any).zh_cn.at(-1).fields[0].text.content).toBe('动作:\n已创建');
+    expect((known.i18n_elements as any).en_us.at(-1).fields[0].text.content).toBe('Action:\nCreated');
 
     const unknown = buildFeishuCard({
       titleKey: 'notification',
       color: 'grey',
       blocks: [{ kind: 'short', fields: [{ labelKey: 'action', value: 'some_weird_action' }] }],
     });
-    expect((unknown.i18n_elements as any).zh_cn.at(-1).fields[0].text.content).toBe('动作\nsome_weird_action');
+    expect((unknown.i18n_elements as any).zh_cn.at(-1).fields[0].text.content).toBe('动作:\nsome_weird_action');
   });
 
   it('a "full" block before a "short" block renders as its own line ahead of the fields grid', () => {
@@ -120,7 +120,7 @@ describe('buildFeishuCard', () => {
     });
     const zh = (card.i18n_elements as any).zh_cn;
     // project omitted (no project data) -> summary -> triggeredRule (full) -> fields grid
-    expect(zh[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '触发规则\nProduction error alert' } });
+    expect(zh[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '触发规则:\nProduction error alert' } });
     expect(zh[2].fields).toBeDefined();
   });
 
@@ -148,8 +148,8 @@ describe('buildFeishuCard', () => {
     // two distinct rows, not one row with all 4 fields packed together
     expect(zh[1].fields).toHaveLength(2);
     expect(zh[2].fields).toHaveLength(2);
-    expect(zh[1].fields.map((f: any) => f.text.content)).toEqual(['级别\nerror', '时间\n2026-01-01 00:00:00 (UTC+03:00)']);
-    expect(zh[2].fields.map((f: any) => f.text.content)).toEqual(['触发规则\nRule A', '定位线索\nScreen']);
+    expect(zh[1].fields.map((f: any) => f.text.content)).toEqual(['级别:\nerror', '时间:\n2026-01-01 00:00:00 (UTC+03:00)']);
+    expect(zh[2].fields.map((f: any) => f.text.content)).toEqual(['触发规则:\nRule A', '定位线索:\nScreen']);
   });
 
   it('no blocks -> no extra rows; no url -> no hr, no button (fallback/notification shape)', () => {
@@ -171,8 +171,8 @@ describe('buildFeishuCard', () => {
     expect(zh[0]).toEqual({
       tag: 'div',
       fields: [
-        { is_short: true, text: { tag: 'plain_text', content: '资源类型\ncomment' } },
-        { is_short: true, text: { tag: 'plain_text', content: '动作\n已创建' } },
+        { is_short: true, text: { tag: 'plain_text', content: '资源类型:\ncomment' } },
+        { is_short: true, text: { tag: 'plain_text', content: '动作:\n已创建' } },
       ],
     });
     expect(zh.some((e: any) => e.tag === 'hr')).toBe(false);
