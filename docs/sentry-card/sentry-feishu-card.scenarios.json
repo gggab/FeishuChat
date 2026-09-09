@@ -1,0 +1,1176 @@
+[
+  {
+    "key": "error",
+    "name": "error · 错误事件",
+    "basis": "现有 error 解析字段；示例 culprit = Screen，不假设它是页面或文件名。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "red",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "development · 错误事件",
+            "en_us": "development · Error event"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "级别\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "定位线索\nScreen"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看错误事件"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-error-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Level\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Location hint\nScreen"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View error event"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-error-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "event_alert",
+    "name": "event_alert · 规则触发",
+    "basis": "当前 parser 可提取 triggered_rule；规则名称不是阈值。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "red",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "production · 规则告警",
+            "en_us": "production · Rule alert"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "触发规则\nProduction error alert"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "级别\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "定位线索\napp.handler in process"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看告警事件"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-event-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Triggered rule\nProduction error alert"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Level\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Location hint\napp.handler in process"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View alert event"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-event-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "issue_created",
+    "name": "issue · 新建",
+    "basis": "只用当前 parser 提取的字段；缺失环境、累计统计、状态、负责人均不显示。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "red",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "新问题",
+            "en_us": "New issue"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "动作\n已创建"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "级别\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "定位线索\napp.handler in process"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看问题"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-issue-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Action\nCreated"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Level\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Location hint\napp.handler in process"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View issue"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-issue-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "issue_resolved",
+    "name": "issue · 已解决",
+    "basis": "body.action = resolved；表示 Sentry 问题处理状态，不证明服务已恢复。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "green",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "问题已解决",
+            "en_us": "Issue resolved"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "动作\n已解决"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "原问题级别\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "定位线索\napp.handler in process"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看问题"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-issue-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Action\nResolved"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Original issue level\nerror"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Location hint\napp.handler in process"
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View issue"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-issue-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "metric_critical",
+    "name": "metric_alert · 严重",
+    "basis": "使用 metric_alert.title、body.action 和 description_text；说明为上游示例原文，不改造成自算统计。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "red",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "production · 指标告警 · 严重",
+            "en_us": "production · Metric alert · Critical"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "API error rate"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "状态\n严重"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "告警说明\nError events exceeded the configured threshold."
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看指标告警"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-metric-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "API error rate"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Status\nCritical"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Alert description\nError events exceeded the configured threshold."
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View metric alert"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-metric-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "metric_warning",
+    "name": "metric_alert · 警告",
+    "basis": "body.action = warning；本稿建议橙色，当前 parser 对未恢复指标统一 red，落地时需改。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "orange",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "production · 指标告警 · 警告",
+            "en_us": "production · Metric alert · Warning"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "API error rate"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "状态\n警告"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "告警说明\nWarning threshold reached."
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看指标告警"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-metric-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "API error rate"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Status\nWarning"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Alert description\nWarning threshold reached."
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View metric alert"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-metric-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "metric_resolved",
+    "name": "metric_alert · 已恢复",
+    "basis": "body.action = resolved；没有 date_closed 时不显示恢复时间或持续时长。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "green",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "production · 指标告警 · 已恢复",
+            "en_us": "production · Metric alert · Resolved"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "API error rate"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "状态\n已恢复"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "告警说明\nThe alert condition is no longer active."
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看指标告警"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-metric-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "API error rate"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Status\nResolved"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Alert description\nThe alert condition is no longer active."
+            }
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View metric alert"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-metric-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "fallback",
+    "name": "未知资源 · 无链接",
+    "basis": "未知资源不推断为 error；无项目、环境、正文详情和有效链接时均不生成对应组件。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "grey",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "Sentry 通知",
+            "en_us": "Sentry notification"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "资源类型\ncomment"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "动作\n已创建"
+                }
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Resource type\ncomment"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Action\nCreated"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "key": "issue_optional",
+    "name": "issue · 可选字段样本",
+    "basis": "仅在 data.issue 实际有 shortId/status/count/userCount/assignedTo 时适用；样例 assignedTo 显式为 null。当前 parser 尚未提取这些字段。",
+    "card": {
+      "config": {
+        "wide_screen_mode": true
+      },
+      "header": {
+        "template": "red",
+        "title": {
+          "tag": "plain_text",
+          "i18n": {
+            "zh_cn": "新问题",
+            "en_us": "New issue"
+          }
+        }
+      },
+      "i18n_elements": {
+        "zh_cn": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "问题编号\nDASHBOARD-128"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "状态\n未解决"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "累计事件数 · Issue\n26"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "累计受影响用户 · Issue\n8"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "负责人\n未分配"
+            }
+          },
+          {
+            "tag": "note",
+            "elements": [
+              {
+                "tag": "plain_text",
+                "content": "累计统计采用 payload 原始范围，不限定为某个环境。"
+              }
+            ]
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "查看问题"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-issue-web-url"
+              }
+            ]
+          }
+        ],
+        "en_us": [
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "std-smart-office-dashboard"
+            }
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "TypeError: Cannot read properties of undefined (reading 'x')"
+            }
+          },
+          {
+            "tag": "div",
+            "fields": [
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Issue ID\nDASHBOARD-128"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Status\nUnresolved"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Total issue events\n26"
+                }
+              },
+              {
+                "is_short": true,
+                "text": {
+                  "tag": "plain_text",
+                  "content": "Total affected issue users\n8"
+                }
+              }
+            ]
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "div",
+            "text": {
+              "tag": "plain_text",
+              "content": "Assignee\nUnassigned"
+            }
+          },
+          {
+            "tag": "note",
+            "elements": [
+              {
+                "tag": "plain_text",
+                "content": "Totals use the payload scope, without an environment-specific filter."
+              }
+            ]
+          },
+          {
+            "tag": "action",
+            "actions": [
+              {
+                "tag": "button",
+                "text": {
+                  "tag": "plain_text",
+                  "content": "View issue"
+                },
+                "type": "primary",
+                "url": "https://example.invalid/replace-with-issue-web-url"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

@@ -97,15 +97,17 @@ describe('POST /webhooks/sentry', () => {
     },
   });
 
-  it('验签通过则以应用身份转发卡片到目标群', async () => {
+  it('验签通过则立即返回 200（不等飞书那一趟网络往返），随后异步转发卡片到目标群', async () => {
     const resp = await postAlert(alertBody, sign(alertBody));
     expect(resp.status).toBe(200);
     const body = await resp.json();
     expect(body.ok).toBe(true);
 
-    // 第一次调 tenant_access_token，第二次发消息
+    // 响应已经先发出去了，飞书发送是异步的：等它真正发生再断言，而不是假设已经完成
+    await vi.waitFor(() => {
+      expect(feishuPost.mock.calls.some(([url]) => String(url).startsWith('/im/v1/messages'))).toBe(true);
+    });
     const sendCall = feishuPost.mock.calls.find(([url]) => String(url).startsWith('/im/v1/messages'));
-    expect(sendCall).toBeDefined();
     const [, payload, options] = sendCall!;
     expect(payload.receive_id).toBe(CHAT_ID);
     expect(payload.msg_type).toBe('interactive');
@@ -114,18 +116,24 @@ describe('POST /webhooks/sentry', () => {
     expect(options.headers.Authorization).toBe('Bearer t-1');
   });
 
-  it('飞书发送失败（如群不存在/机器人不在群）时跳过而非报故障', async () => {
+  it('飞书发送失败（如群不存在/机器人不在群）时响应早已发出，失败只记日志不影响 Sentry 侧', async () => {
     feishuPost.mockImplementation((url: string) => {
       if (url === '/auth/v3/tenant_access_token/internal') {
         return Promise.resolve({ data: { code: 0, msg: 'ok', tenant_access_token: 't-1', expire: 7200 } });
       }
       return Promise.resolve({ data: { code: 230001, msg: 'bot is not in the chat' } });
     });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const resp = await postAlert(alertBody, sign(alertBody));
     expect(resp.status).toBe(200);
     const body = await resp.json();
-    expect(body.ok).toBe(true);
-    expect(body.skipped).toBe('send_failed');
+    // 响应在飞书调用之前就已经发出，此时还不知道发送会不会失败，所以响应体里不再带 skipped
+    expect(body).toEqual({ ok: true });
+
+    await vi.waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('发送到群'), expect.anything());
+    });
+    errorSpy.mockRestore();
   });
 
   it('未映射项目且默认群为空时跳过发送', async () => {

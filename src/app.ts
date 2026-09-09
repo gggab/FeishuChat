@@ -48,7 +48,12 @@ export function createApp(deps: AppDeps): Express {
   });
 
   // Sentry Internal Integration webhook：验签后以应用身份转发告警卡片到飞书群
-  app.post('/webhooks/sentry', async (req, res) => {
+  //
+  // Sentry 的 webhook 客户端读超时只有 1 秒（实测 error_type=readtimeout），比一次完整的
+  // 飞书 API 往返（必要时先换 tenant_access_token，再发卡片）更容易超。所以这里在确定好
+  // 目标群之后立刻给 Sentry 回 200，飞书发送放到响应之后异步进行，不让 Sentry 等我们和飞书
+  // 之间的网络往返，否则偶发的网络抖动就会被 Sentry 判定为投递失败且不重试。
+  app.post('/webhooks/sentry', (req, res) => {
     const { sentryWebhookSecret, feishuAlertChatId } = config;
     if (!sentryWebhookSecret) {
       res.status(503).json({ ok: false, message: '未配置 SENTRY_WEBHOOK_SECRET' });
@@ -79,15 +84,17 @@ export function createApp(deps: AppDeps): Express {
       res.json({ ok: true, skipped: 'no_chat_id' });
       return;
     }
-    try {
-      await feishu.sendCardMessage(chatId, buildFeishuCard(alert));
-      console.log(`[sentry] 已转发告警到飞书群：resource=${resource} project=${alert.projectId ?? '-'} chatId=${chatId}`);
-      res.json({ ok: true });
-    } catch (err) {
-      // 目标群不存在/机器人不在群里等发送失败，不当作网关故障处理（避免 Sentry 重试风暴），仅记录日志后跳过
-      console.error(`[sentry] 发送到群 ${chatId} 失败，跳过：`, err);
-      res.json({ ok: true, skipped: 'send_failed' });
-    }
+    // 已经决定了目标群，先回应 Sentry，飞书发送异步进行，不占用 Sentry 那 1 秒超时
+    res.json({ ok: true });
+    feishu
+      .sendCardMessage(chatId, buildFeishuCard(alert))
+      .then(() => {
+        console.log(`[sentry] 已转发告警到飞书群：resource=${resource} project=${alert.projectId ?? '-'} chatId=${chatId}`);
+      })
+      .catch((err: unknown) => {
+        // 目标群不存在/机器人不在群里等发送失败，响应已经发给 Sentry 了，这里只记录日志
+        console.error(`[sentry] 发送到群 ${chatId} 失败：`, err);
+      });
   });
 
   registerSentryProjectsAdminRoutes(app, { config, sentryProjectStore });
