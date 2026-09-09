@@ -1,6 +1,17 @@
 import crypto from 'node:crypto';
 import { AlertField, AlertMessage, ContentBlock, fullField, noteBlock, shortFields, TitleKey } from './feishuCard.js';
-import { DEFAULT_TIMEZONE } from './sentrySettingsStore.js';
+import { DEFAULT_TIMEZONE } from './sentryProjectStore.js';
+
+/**
+ * Resolves which IANA timezone to display card timestamps in, given the alert's numeric Sentry
+ * project ID (undefined for resource types that don't carry one, e.g. metric_alert). Timezone is
+ * a per-project-mapping setting (different groups serve different regions), not a single global
+ * one — see SentryProjectStore.timezone. The default resolver ignores projectId and always
+ * returns DEFAULT_TIMEZONE, so callers that don't care about per-project timezones (tests, the
+ * one-off simulate script) keep the old fixed-offset-equivalent behavior unchanged.
+ */
+export type ResolveTimeZone = (projectId: string | undefined) => string;
+const defaultResolveTimeZone: ResolveTimeZone = () => DEFAULT_TIMEZONE;
 
 /**
  * Sentry Internal Integration webhook receiver.
@@ -60,13 +71,14 @@ function levelColor(level: string): 'red' | 'orange' | 'blue' {
 }
 
 /**
- * Feishu cards have no per-viewer timezone concept, so timestamps are displayed in one
- * deployment-wide timezone (configurable on /admin/sentry-projects, see SentrySettingsStore)
- * rather than the raw UTC instant — see docs/sentry-card/event-alert-card-content.md row 6.
- * Rendered as one line ("YYYY-MM-DD HH:mm:ss (UTC+03:00)"); an earlier two-line variant
- * (offset on its own line) wasted vertical space in the real Feishu client and was dropped
- * after visual review. `timeZone` must be a valid IANA name (SentrySettingsStore.setTimezone
- * validates this before it's ever persisted) — an invalid name would throw here.
+ * Feishu cards have no per-viewer timezone concept, so timestamps are displayed in whichever
+ * timezone the target project's mapping specifies (SentryProjectStore.timezone, resolved by the
+ * caller via ResolveTimeZone) rather than the raw UTC instant — see
+ * docs/sentry-card/event-alert-card-content.md row 6. Rendered as one line
+ * ("YYYY-MM-DD HH:mm:ss (UTC+03:00)"); an earlier two-line variant (offset on its own line)
+ * wasted vertical space in the real Feishu client and was dropped after visual review.
+ * `timeZone` must be a valid IANA name (SentryProjectStore.upsert validates this before it's
+ * ever persisted) — an invalid name would throw here.
  */
 function formatDisplayDateTime(iso: string | undefined, timeZone: string): string | undefined {
   if (!iso) return undefined;
@@ -242,25 +254,28 @@ const METRIC_COLOR: Record<string, AlertMessage['color']> = {
 
 /**
  * Parse a Sentry webhook payload into a generic alert structure (unknown resources/actions fall
- * back to a generic card). `timeZone` controls how event/issue timestamps are displayed on the
- * card (see SentrySettingsStore, configurable on /admin/sentry-projects) — it defaults to the
- * gateway's historical fixed display timezone so callers that don't pass one keep prior behavior.
+ * back to a generic card). `resolveTimeZone` controls how event/issue timestamps are displayed
+ * on the card — it's given the alert's numeric project ID (once known) and returns the IANA zone
+ * for that project's mapping (see SentryProjectStore.timezone, configurable per project/group on
+ * /admin/sentry-projects). Defaults to always DEFAULT_TIMEZONE so callers that don't care about
+ * per-project timezones keep prior behavior.
  */
-export function parseSentryAlert(resource: string, body: any, timeZone: string = DEFAULT_TIMEZONE): AlertMessage {
+export function parseSentryAlert(resource: string, body: any, resolveTimeZone: ResolveTimeZone = defaultResolveTimeZone): AlertMessage {
   if (resource === 'event_alert') {
     const ev = body?.data?.event ?? {};
     const level = String(ev.level ?? 'error').toLowerCase();
     const environment = ev.environment ?? tagValue(ev.tags, 'environment');
+    const projectId = ev.project != null ? String(ev.project) : undefined;
     return {
       titleKey: 'errorAlert',
       environment,
       color: levelColor(level),
       summary: ev.title ?? ev.message,
-      blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule, timeZone),
+      blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule, resolveTimeZone(projectId)),
       // web_url is the user-facing page; data.event.url is the API URL and must never be used as a link
       url: ev.web_url,
       // event_alert payload only has a numeric project ID, no name; fall back to the API URL for a slug
-      projectId: ev.project != null ? String(ev.project) : undefined,
+      projectId,
       projectSlug: projectSlugFromUrl(ev.url),
     };
   }
@@ -345,7 +360,7 @@ export function parseSentryAlert(resource: string, body: any, timeZone: string =
       // ACTIVITY_TYPE_TO_ISSUE_ACTION currently only maps to 'resolved'; the rich stats layout below is
       // specific to that card (see docs/sentry-card/activity-alert-card-content.md) and would need
       // reconsidering, not blind reuse, if another activity type is ever mapped here.
-      blocks: buildActivityResolvedBlocks(issue, body?.data?.activity, body?.data?.alert, timeZone),
+      blocks: buildActivityResolvedBlocks(issue, body?.data?.activity, body?.data?.alert, resolveTimeZone(projectId)),
       url: issue.web_url,
       projectId,
       projectSlug,
@@ -356,14 +371,15 @@ export function parseSentryAlert(resource: string, body: any, timeZone: string =
     const err = body?.data?.error ?? {};
     const level = String(err.level ?? 'error').toLowerCase();
     const environment = err.environment ?? tagValue(err.tags, 'environment');
+    const projectId = err.project != null ? String(err.project) : undefined;
     return {
       titleKey: 'errorAlert',
       environment,
       color: levelColor(level),
       summary: err.title,
-      blocks: buildErrorAlertBlocks(err, undefined, timeZone),
+      blocks: buildErrorAlertBlocks(err, undefined, resolveTimeZone(projectId)),
       url: err.web_url,
-      projectId: err.project != null ? String(err.project) : undefined,
+      projectId,
       // error payload only has a numeric project ID, no name; fall back to the detail URL's /projects/<org>/<slug>/ for display
       projectSlug: projectSlugFromUrl(err.url),
     };

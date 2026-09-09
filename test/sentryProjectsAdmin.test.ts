@@ -12,19 +12,25 @@ import { FeishuClient } from '../src/feishu.js';
 import { OAuthStateStore } from '../src/oauthState.js';
 import { RateLimiter } from '../src/rateLimit.js';
 import { SentryProjectStore } from '../src/sentryProjectStore.js';
-import { SentrySettingsStore } from '../src/sentrySettingsStore.js';
 import { TokenStore } from '../src/tokenStore.js';
 
 const KEY = 'd'.repeat(64);
 const ADMIN_TOKEN = 'admin-secret';
 
-describe('GET/PUT /admin/sentry-projects/api/settings', () => {
+describe('/admin/sentry-projects/api (per-project chat_id + timezone mapping)', () => {
   let dir: string;
   let server: Server;
   let baseUrl: string;
 
+  function api(pathSuffix: string, opts?: RequestInit) {
+    return fetch(`${baseUrl}${pathSuffix}`, {
+      ...opts,
+      headers: { ...(opts?.headers as Record<string, string>), 'X-Admin-Token': ADMIN_TOKEN, 'Content-Type': 'application/json' },
+    });
+  }
+
   beforeEach(async () => {
-    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'admin-settings-test-'));
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'admin-projects-test-'));
     const config: AppConfig = {
       appId: 'cli_test',
       appSecret: 'secret',
@@ -44,7 +50,6 @@ describe('GET/PUT /admin/sentry-projects/api/settings', () => {
       audit: new AuditLogger(dir),
       rateLimiter: new RateLimiter(60, 60_000),
       sentryProjectStore: new SentryProjectStore(path.join(dir, 'sentryProjects.json')),
-      sentrySettingsStore: new SentrySettingsStore(path.join(dir, 'sentrySettings.json')),
     });
     server = createServer(app);
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -56,40 +61,45 @@ describe('GET/PUT /admin/sentry-projects/api/settings', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  it('GET returns the default timezone before anything is configured', async () => {
-    const resp = await fetch(`${baseUrl}/admin/sentry-projects/api/settings`, { headers: { 'X-Admin-Token': ADMIN_TOKEN } });
+  it('POST without a timezone creates a mapping with no per-project override', async () => {
+    const resp = await api('/admin/sentry-projects/api', { method: 'POST', body: JSON.stringify({ projectId: '4', chatId: 'oc_a' }) });
     expect(resp.status).toBe(200);
-    expect(await resp.json()).toEqual({ timezone: 'Asia/Riyadh' });
+    const { record } = await resp.json();
+    expect(record).toMatchObject({ projectId: '4', chatId: 'oc_a' });
+    expect(record.timezone).toBeUndefined();
+
+    const list = await (await api('/admin/sentry-projects/api')).json();
+    expect(list).toHaveLength(1);
+    expect(list[0].timezone).toBeUndefined();
   });
 
-  it('PUT with a valid IANA timezone saves it, and a later GET reflects it', async () => {
-    const putResp = await fetch(`${baseUrl}/admin/sentry-projects/api/settings`, {
-      method: 'PUT',
-      headers: { 'X-Admin-Token': ADMIN_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ timezone: 'Asia/Shanghai' }),
-    });
-    expect(putResp.status).toBe(200);
-    expect((await putResp.json()).settings).toEqual({ timezone: 'Asia/Shanghai' });
+  it('POST with a valid IANA timezone stores it on that project mapping only', async () => {
+    await api('/admin/sentry-projects/api', { method: 'POST', body: JSON.stringify({ projectId: '4', chatId: 'oc_china', timezone: 'Asia/Shanghai' }) });
+    await api('/admin/sentry-projects/api', { method: 'POST', body: JSON.stringify({ projectId: '5', chatId: 'oc_riyadh', timezone: 'Asia/Riyadh' }) });
 
-    const getResp = await fetch(`${baseUrl}/admin/sentry-projects/api/settings`, { headers: { 'X-Admin-Token': ADMIN_TOKEN } });
-    expect(await getResp.json()).toEqual({ timezone: 'Asia/Shanghai' });
+    const list = await (await api('/admin/sentry-projects/api')).json();
+    expect(list).toContainEqual(expect.objectContaining({ projectId: '4', chatId: 'oc_china', timezone: 'Asia/Shanghai' }));
+    expect(list).toContainEqual(expect.objectContaining({ projectId: '5', chatId: 'oc_riyadh', timezone: 'Asia/Riyadh' }));
   });
 
-  it('PUT with an invalid timezone name is rejected with 400 and does not change the stored value', async () => {
-    const resp = await fetch(`${baseUrl}/admin/sentry-projects/api/settings`, {
-      method: 'PUT',
-      headers: { 'X-Admin-Token': ADMIN_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ timezone: 'Not/AZone' }),
-    });
+  it('POST with an invalid timezone name is rejected with 400 and nothing is saved', async () => {
+    const resp = await api('/admin/sentry-projects/api', { method: 'POST', body: JSON.stringify({ projectId: '4', chatId: 'oc_a', timezone: 'Not/AZone' }) });
     expect(resp.status).toBe(400);
-    const getResp = await fetch(`${baseUrl}/admin/sentry-projects/api/settings`, { headers: { 'X-Admin-Token': ADMIN_TOKEN } });
-    expect(await getResp.json()).toEqual({ timezone: 'Asia/Riyadh' });
+    const list = await (await api('/admin/sentry-projects/api')).json();
+    expect(list).toEqual([]);
+  });
+
+  it('re-POSTing with timezone="" clears a previously-set override back to the default', async () => {
+    await api('/admin/sentry-projects/api', { method: 'POST', body: JSON.stringify({ projectId: '4', chatId: 'oc_a', timezone: 'Asia/Shanghai' }) });
+    await api('/admin/sentry-projects/api', { method: 'POST', body: JSON.stringify({ projectId: '4', chatId: 'oc_a', timezone: '' }) });
+    const list = await (await api('/admin/sentry-projects/api')).json();
+    expect(list).toHaveLength(1);
+    expect(list[0].projectId).toBe('4');
+    expect(list[0].timezone).toBeUndefined();
   });
 
   it('wrong/missing admin token is rejected with 401', async () => {
-    const noToken = await fetch(`${baseUrl}/admin/sentry-projects/api/settings`);
-    expect(noToken.status).toBe(401);
-    const wrongToken = await fetch(`${baseUrl}/admin/sentry-projects/api/settings`, { headers: { 'X-Admin-Token': 'wrong' } });
-    expect(wrongToken.status).toBe(401);
+    const resp = await fetch(`${baseUrl}/admin/sentry-projects/api`);
+    expect(resp.status).toBe(401);
   });
 });

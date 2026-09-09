@@ -3,20 +3,40 @@ import path from 'node:path';
 
 /**
  * Sentry 项目 ID → 飞书群 chat_id 的映射，用于按项目路由告警。
- * 通过管理页面手动新增（projectId + chatId），slug/name 在收到该项目
+ * 通过管理页面手动新增（projectId + chatId + 可选 timezone），slug/name 在收到该项目
  * 第一条真实告警后自动回填，不会覆盖已有值、也不会自动新增映射。
+ *
+ * timezone 是这条映射（也就是目标群）专属的卡片时间显示时区——飞书卡片没有"按查看者
+ * 本地时区显示"的概念，只能网关侧固定选一个；不同群面向不同地区的人，就需要能各配各的
+ * （比如中国群配 Asia/Shanghai，利雅得群配 Asia/Riyadh），而不是整个网关只有一个全局时区。
+ * 没配就用 DEFAULT_TIMEZONE 兜底（也是没有任何项目映射的默认群所使用的时区）。
  */
 export interface SentryProjectRecord {
   projectId: string;
   chatId: string;
   slug?: string;
   name?: string;
+  /** IANA 时区名（如 "Asia/Shanghai"），未设置时该项目的告警卡片时间用 DEFAULT_TIMEZONE 显示 */
+  timezone?: string;
   createdAt: number;
   updatedAt: number;
 }
 
 interface StoreFile {
   projects: Record<string, SentryProjectRecord>;
+}
+
+/** 没有项目专属映射时（含默认群）的兜底显示时区，也是之前版本硬编码的固定偏移 */
+export const DEFAULT_TIMEZONE = 'Asia/Riyadh';
+
+/** Intl 认不认识这个时区名；无效的话 `new Intl.DateTimeFormat` 会抛 RangeError */
+export function isValidTimeZone(timezone: string): boolean {
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export class SentryProjectStore {
@@ -59,15 +79,31 @@ export class SentryProjectStore {
     return this.data.projects[projectId];
   }
 
-  /** 管理页面新增/覆盖一条映射（保留已回填的 slug/name） */
-  upsert(projectId: string, chatId: string): SentryProjectRecord {
+  /**
+   * 管理页面新增/覆盖一条映射（保留已回填的 slug/name）。
+   * `timezone` 未传（undefined）时保留原有值；传空字符串表示清空（改回用 DEFAULT_TIMEZONE 兜底）；
+   * 传非空字符串时必须是 Intl 认识的合法 IANA 时区名，否则抛错，不会静默存一个坏值进去。
+   */
+  upsert(projectId: string, chatId: string, timezone?: string): SentryProjectRecord {
     const now = Date.now();
     const existing = this.data.projects[projectId];
+    let resolvedTimezone = existing?.timezone;
+    if (timezone !== undefined) {
+      const trimmed = timezone.trim();
+      if (!trimmed) {
+        resolvedTimezone = undefined;
+      } else if (!isValidTimeZone(trimmed)) {
+        throw new Error(`不是有效的 IANA 时区名称：${timezone}`);
+      } else {
+        resolvedTimezone = trimmed;
+      }
+    }
     const record: SentryProjectRecord = {
       projectId,
       chatId,
       slug: existing?.slug,
       name: existing?.name,
+      timezone: resolvedTimezone,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };

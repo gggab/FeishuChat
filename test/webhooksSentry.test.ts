@@ -13,7 +13,6 @@ import { FeishuClient } from '../src/feishu.js';
 import { OAuthStateStore } from '../src/oauthState.js';
 import { RateLimiter } from '../src/rateLimit.js';
 import { SentryProjectStore } from '../src/sentryProjectStore.js';
-import { SentrySettingsStore } from '../src/sentrySettingsStore.js';
 import { TokenStore } from '../src/tokenStore.js';
 
 const KEY = 'd'.repeat(64);
@@ -55,7 +54,6 @@ describe('POST /webhooks/sentry', () => {
       audit: new AuditLogger(dir),
       rateLimiter: new RateLimiter(60, 60_000),
       sentryProjectStore: new SentryProjectStore(path.join(dir, 'sentryProjects.json')),
-      sentrySettingsStore: new SentrySettingsStore(path.join(dir, 'sentrySettings.json')),
     });
   }
 
@@ -136,6 +134,65 @@ describe('POST /webhooks/sentry', () => {
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('发送到群'), expect.anything());
     });
     errorSpy.mockRestore();
+  });
+
+  it('项目映射带时区时，卡片时间按该项目专属的时区显示（不同项目/群各自独立，不是网关全局一个时区）', async () => {
+    const projectStore = new SentryProjectStore(path.join(dir, 'perProjectTz.json'));
+    projectStore.upsert('4', 'oc_china', 'Asia/Shanghai');
+    projectStore.upsert('5', 'oc_riyadh', 'Asia/Riyadh');
+    const feishu = new FeishuClient(config.appId, config.appSecret, { post: feishuPost, get: vi.fn() } as unknown as AxiosInstance);
+    const testServer = createServer(
+      createApp({
+        config,
+        feishu,
+        tokenStore: new TokenStore({ filePath: path.join(dir, 'tokens.json'), encryptionKey: KEY }),
+        stateStore: new OAuthStateStore(),
+        audit: new AuditLogger(dir),
+        rateLimiter: new RateLimiter(60, 60_000),
+        sentryProjectStore: projectStore,
+      }),
+    );
+    await new Promise<void>((resolve) => testServer.listen(0, '127.0.0.1', resolve));
+    const testBase = `http://127.0.0.1:${(testServer.address() as AddressInfo).port}`;
+    try {
+      const bodyForProject = (projectId: number) =>
+        JSON.stringify({
+          action: 'triggered',
+          data: { event: { title: 'x', level: 'error', project: projectId, datetime: '2026-09-09T10:05:18.224000Z', web_url: 'https://sentry.example.com/i/9/' } },
+        });
+
+      const chinaBody = bodyForProject(4);
+      await fetch(`${testBase}/webhooks/sentry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Sentry-Hook-Signature': sign(chinaBody), 'Sentry-Hook-Resource': 'event_alert' },
+        body: chinaBody,
+      });
+      await vi.waitFor(() => {
+        expect(feishuPost.mock.calls.some(([url, payload]: [string, any]) => url.startsWith('/im/v1/messages') && payload.receive_id === 'oc_china')).toBe(
+          true,
+        );
+      });
+      const chinaCall = feishuPost.mock.calls.find(([url, payload]: [string, any]) => url.startsWith('/im/v1/messages') && payload.receive_id === 'oc_china');
+      expect(chinaCall![1].content).toContain('2026-09-09 18:05:18 (UTC+08:00)');
+
+      const riyadhBody = bodyForProject(5);
+      await fetch(`${testBase}/webhooks/sentry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Sentry-Hook-Signature': sign(riyadhBody), 'Sentry-Hook-Resource': 'event_alert' },
+        body: riyadhBody,
+      });
+      await vi.waitFor(() => {
+        expect(
+          feishuPost.mock.calls.some(([url, payload]: [string, any]) => url.startsWith('/im/v1/messages') && payload.receive_id === 'oc_riyadh'),
+        ).toBe(true);
+      });
+      const riyadhCall = feishuPost.mock.calls.find(
+        ([url, payload]: [string, any]) => url.startsWith('/im/v1/messages') && payload.receive_id === 'oc_riyadh',
+      );
+      expect(riyadhCall![1].content).toContain('2026-09-09 13:05:18 (UTC+03:00)');
+    } finally {
+      await new Promise<void>((resolve) => testServer.close(() => resolve()));
+    }
   });
 
   it('未映射项目且默认群为空时跳过发送', async () => {

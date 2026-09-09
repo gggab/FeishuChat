@@ -65,16 +65,42 @@ describe('parseSentryAlert', () => {
     expect(shortBlocks[1].fields.map((f) => f.labelKey)).toEqual(['triggeredRule', 'locationHint']);
   });
 
-  it('event_alert: the display timezone is configurable (admin-page setting), defaulting to Asia/Riyadh (UTC+3) when not passed', () => {
-    const body = { action: 'triggered', data: { event: { title: 'x', level: 'error', datetime: '2026-09-09T10:05:18.224000Z' } } };
+  it('event_alert: the display timezone is per-project (resolveTimeZone gets the numeric project ID), defaulting to Asia/Riyadh (UTC+3) when not passed', () => {
+    const body = {
+      action: 'triggered',
+      data: { event: { title: 'x', level: 'error', datetime: '2026-09-09T10:05:18.224000Z', project: 4 } },
+    };
     const defaulted = parseSentryAlert('event_alert', body);
     expect(allFields(defaulted.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 13:05:18 (UTC+03:00)' });
 
-    const shanghai = parseSentryAlert('event_alert', body, 'Asia/Shanghai');
+    // resolveTimeZone receives the alert's projectId, mirroring how app.ts looks up the per-project mapping's timezone
+    const shanghai = parseSentryAlert('event_alert', body, (projectId) => {
+      expect(projectId).toBe('4');
+      return 'Asia/Shanghai';
+    });
     expect(allFields(shanghai.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 18:05:18 (UTC+08:00)' });
 
-    const utc = parseSentryAlert('event_alert', body, 'UTC');
+    const utc = parseSentryAlert('event_alert', body, () => 'UTC');
     expect(allFields(utc.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 10:05:18 (UTC+00:00)' });
+  });
+
+  it('event_alert: different projects can resolve to different timezones — mirrors "china group sees UTC+8, riyadh group sees UTC+3"', () => {
+    const timezoneByProject: Record<string, string> = { '4': 'Asia/Shanghai', '5': 'Asia/Riyadh' };
+    const resolveTimeZone = (projectId: string | undefined) => (projectId && timezoneByProject[projectId]) || 'UTC';
+
+    const china = parseSentryAlert(
+      'event_alert',
+      { action: 'triggered', data: { event: { title: 'x', level: 'error', datetime: '2026-09-09T10:05:18.224000Z', project: 4 } } },
+      resolveTimeZone,
+    );
+    expect(allFields(china.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 18:05:18 (UTC+08:00)' });
+
+    const riyadh = parseSentryAlert(
+      'event_alert',
+      { action: 'triggered', data: { event: { title: 'x', level: 'error', datetime: '2026-09-09T10:05:18.224000Z', project: 5 } } },
+      resolveTimeZone,
+    );
+    expect(allFields(riyadh.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 13:05:18 (UTC+03:00)' });
   });
 
   it('event_alert: missing triggered_rule/release/time is omitted entirely, not shown as a placeholder', () => {
