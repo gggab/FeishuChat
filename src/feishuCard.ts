@@ -209,6 +209,27 @@ function textLine(content: string): Record<string, unknown> {
   return { tag: 'div', text: { tag: 'plain_text', content } };
 }
 
+/**
+ * Markdown-sensitive characters that could otherwise be (mis)interpreted by lark_md if they
+ * happen to appear in upstream text (error messages, stack traces...) — escaped so raw content
+ * always renders as literal text instead of accidentally toggling emphasis/links/etc.
+ */
+function escapeLarkMd(text: string): string {
+  return text.replace(/[\\`*_~<>[\]]/g, (ch) => `\\${ch}`);
+}
+
+/**
+ * The error/issue summary line renders bolder than the rest of the body (Figma: 17px medium vs.
+ * 14px regular for field values), matching every card the design covers. Feishu's Card JSON
+ * (1.0 or 2.0's rich-text component) has no `<font color>` tag and no way to set an arbitrary hex
+ * color on plain text — the only color-capable inline element is `<text_tag>`, a small colored
+ * badge/chip from a fixed named palette, which would add an unwanted pill shape here. So only the
+ * bold weight from the Figma spec is reproduced; the grey (#646A73) field-label color is not.
+ */
+function boldTextLine(content: string): Record<string, unknown> {
+  return { tag: 'div', text: { tag: 'lark_md', content: `**${escapeLarkMd(content)}**` } };
+}
+
 function fieldLine(field: AlertField, locale: Locale): Record<string, unknown> {
   return textLine(`${FIELD_LABELS[field.labelKey][locale]}\n${fieldValueDisplay(field, locale)}`);
 }
@@ -227,7 +248,7 @@ export function buildFeishuCard(msg: AlertMessage): Record<string, unknown> {
     // 'notification' (unknown resource/action) has no title concept at all — every other type always shows one,
     // falling back to a translated placeholder rather than silently dropping the line.
     if (msg.titleKey !== 'notification') {
-      elements.push(textLine(truncate(msg.summary || UNTITLED[locale], TITLE_TEXT_MAX_LEN)));
+      elements.push(boldTextLine(truncate(msg.summary || UNTITLED[locale], TITLE_TEXT_MAX_LEN)));
     }
     for (const block of msg.blocks) {
       if (block.kind === 'full') {

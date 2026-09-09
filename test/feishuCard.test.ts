@@ -25,7 +25,7 @@ describe('buildFeishuCard', () => {
     const en = (card.i18n_elements as any).en_us;
     // body order: project (no label) -> summary (no label) -> short block -> full block -> hr -> button
     expect(zh[0]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: 'std-smart-office-dashboard' } });
-    expect(zh[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: "TypeError: Cannot read properties of undefined (reading 'x')" } });
+    expect(zh[1]).toEqual({ tag: 'div', text: { tag: 'lark_md', content: "**TypeError: Cannot read properties of undefined (reading 'x')**" } });
     expect(zh[2]).toEqual({
       tag: 'div',
       fields: [{ is_short: true, text: { tag: 'plain_text', content: '级别\nerror' } }],
@@ -59,8 +59,15 @@ describe('buildFeishuCard', () => {
 
   it('missing summary falls back to a translated "(untitled)" placeholder, not an empty line', () => {
     const card = buildFeishuCard({ titleKey: 'errorAlert', color: 'red', blocks: [] });
-    expect((card.i18n_elements as any).zh_cn[0]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '(无标题)' } });
-    expect((card.i18n_elements as any).en_us[0]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '(untitled)' } });
+    expect((card.i18n_elements as any).zh_cn[0]).toEqual({ tag: 'div', text: { tag: 'lark_md', content: '**(无标题)**' } });
+    expect((card.i18n_elements as any).en_us[0]).toEqual({ tag: 'div', text: { tag: 'lark_md', content: '**(untitled)**' } });
+  });
+
+  it('the summary line is bold (lark_md) so it visually stands out from the regular field text; special characters are escaped', () => {
+    const card = buildFeishuCard({ titleKey: 'errorAlert', color: 'red', summary: '[Vue warn]: *bad* thing_happened `here`', blocks: [] });
+    const summaryRow = (card.i18n_elements as any).zh_cn[0];
+    expect(summaryRow.text.tag).toBe('lark_md');
+    expect(summaryRow.text.content).toBe('**\\[Vue warn\\]: \\*bad\\* thing\\_happened \\`here\\`**');
   });
 
   it('project display prefers name, then slug, then "#id"; omitted entirely when all are unknown', () => {
@@ -74,8 +81,8 @@ describe('buildFeishuCard', () => {
     expect((withIdOnly.i18n_elements as any).zh_cn[0].text.content).toBe('#4');
 
     const withoutProject = buildFeishuCard({ titleKey: 'errorAlert', color: 'red', blocks: [] });
-    // first element is then the summary placeholder, not a project line
-    expect((withoutProject.i18n_elements as any).zh_cn[0].text.content).toBe('(无标题)');
+    // first element is then the (bold) summary placeholder, not a project line
+    expect((withoutProject.i18n_elements as any).zh_cn[0].text.content).toBe('**(无标题)**');
   });
 
   it('no environment: header title is just the type text, no leading separator', () => {
