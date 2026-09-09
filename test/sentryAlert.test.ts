@@ -335,9 +335,9 @@ describe('parseSentryAlert', () => {
     expect(fields).toContainEqual({ labelKey: 'changedBy', value: 'liaowentao@sensetime.com' });
     expect(fields).toContainEqual({ labelKey: 'totalEvents', value: '104' });
     expect(fields).toContainEqual({ labelKey: 'totalUsers', value: '1' });
-    // offset shown on its own line, matching the Figma "问题已解决" card (distinct from the single-line event_alert time field)
-    expect(fields).toContainEqual({ labelKey: 'firstSeen', value: '2026-09-06 15:52:30\n(UTC+03:00)' });
-    expect(fields).toContainEqual({ labelKey: 'lastSeen', value: '2026-09-09 13:01:27\n(UTC+03:00)' });
+    // same single-line format as the event_alert card's time field (an earlier two-line variant wasted vertical space)
+    expect(fields).toContainEqual({ labelKey: 'firstSeen', value: '2026-09-06 15:52:30 (UTC+03:00)' });
+    expect(fields).toContainEqual({ labelKey: 'lastSeen', value: '2026-09-09 13:01:27 (UTC+03:00)' });
     expect(msg.blocks.some((b) => b.kind === 'note' && b.noteKey === 'cumulativeStats')).toBe(true);
     // issue.web_url is the link — never data.alert.web_url (the Workflow's own config page)
     expect(msg.url).toBe('https://sentry.sensetime-ksa.top/organizations/sentry/issues/22/');

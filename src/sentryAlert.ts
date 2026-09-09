@@ -61,10 +61,12 @@ function levelColor(level: string): 'red' | 'orange' | 'blue' {
 /**
  * Feishu cards have no per-viewer timezone concept, so timestamps are displayed in this
  * deployment's fixed local offset (Asia/Riyadh, UTC+3) rather than the raw UTC instant —
- * see docs/sentry-card/event-alert-card-content.md row 6.
+ * see docs/sentry-card/event-alert-card-content.md row 6. Rendered as one line
+ * ("YYYY-MM-DD HH:mm:ss (UTC+03:00)"); an earlier two-line variant (offset on its own line)
+ * wasted vertical space in the real Feishu client and was dropped after visual review.
  */
 const DISPLAY_UTC_OFFSET_HOURS = 3;
-function formatOffsetDateTime(iso?: string): { date: string; offset: string } | undefined {
+function formatDisplayDateTime(iso?: string): string | undefined {
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
@@ -76,22 +78,7 @@ function formatOffsetDateTime(iso?: string): { date: string; offset: string } | 
   const hh = pad(shifted.getUTCHours());
   const mm = pad(shifted.getUTCMinutes());
   const ss = pad(shifted.getUTCSeconds());
-  return { date: `${y}-${m}-${d} ${hh}:${mm}:${ss}`, offset: `(UTC+${pad(DISPLAY_UTC_OFFSET_HOURS)}:00)` };
-}
-
-/** `YYYY-MM-DD HH:mm:ss (UTC+03:00)` on one line — used for the event_alert/error card's single time field. */
-function formatEventTime(iso?: string): string | undefined {
-  const parts = formatOffsetDateTime(iso);
-  return parts ? `${parts.date} ${parts.offset}` : undefined;
-}
-
-/**
- * `YYYY-MM-DD HH:mm:ss` then `(UTC+03:00)` on its own line — matches the Figma "问题已解决" card,
- * where firstSeen/lastSeen show the offset on a separate line (docs/sentry-card/activity-alert-card-content.md).
- */
-function formatSeenTime(iso?: string): string | undefined {
-  const parts = formatOffsetDateTime(iso);
-  return parts ? `${parts.date}\n${parts.offset}` : undefined;
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss} (UTC+${pad(DISPLAY_UTC_OFFSET_HOURS)}:00)`;
 }
 
 /** `{module} · {function}（{crash_location}）`, dropping whichever part is missing. */
@@ -135,7 +122,7 @@ function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] 
   return [
     ...shortFields(
       { labelKey: 'level', value: level },
-      formatEventTime(ev.datetime) ? { labelKey: 'eventTime', value: formatEventTime(ev.datetime)! } : undefined,
+      formatDisplayDateTime(ev.datetime) ? { labelKey: 'eventTime', value: formatDisplayDateTime(ev.datetime)! } : undefined,
       triggeredRule ? { labelKey: 'triggeredRule', value: String(triggeredRule) } : undefined,
       culprit ? { labelKey: 'locationHint', value: culprit } : undefined,
     ),
@@ -164,8 +151,8 @@ function buildActivityResolvedBlocks(issue: any, activity: any, alert: any): Con
   // count/userCount are cumulative totals for the issue's whole lifetime, not a recent window — 0 is a legitimate value
   const totalEvents = issue.count != null ? String(issue.count) : undefined;
   const totalUsers = issue.userCount != null ? String(issue.userCount) : undefined;
-  const firstSeen = formatSeenTime(issue.firstSeen);
-  const lastSeen = formatSeenTime(issue.lastSeen);
+  const firstSeen = formatDisplayDateTime(issue.firstSeen);
+  const lastSeen = formatDisplayDateTime(issue.lastSeen);
   const hasStats = totalEvents != null || totalUsers != null || firstSeen != null || lastSeen != null;
 
   return [
