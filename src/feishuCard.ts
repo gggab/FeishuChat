@@ -101,7 +101,7 @@ const TITLE_TEXTS: Record<TitleKey, Record<Locale, string>> = {
   // event_alert and error resources are unified into one "错误告警" concept — see docs/sentry-card/event-alert-card-content.md
   errorAlert: { zh_cn: '错误告警', en_us: 'Error alert' },
   issueCreated: { zh_cn: '新问题', en_us: 'New issue' },
-  issueResolved: { zh_cn: '问题已解决', en_us: 'Issue resolved' },
+  issueResolved: { zh_cn: '已解决', en_us: 'Resolved' },
   issueUnresolved: { zh_cn: '问题未解决', en_us: 'Issue unresolved' },
   issueAssigned: { zh_cn: '问题已分配', en_us: 'Issue assigned' },
   issueArchived: { zh_cn: '问题已归档', en_us: 'Issue archived' },

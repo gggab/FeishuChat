@@ -7,7 +7,7 @@
 ## 通知语义
 
 - 该样本顶层 `action` 是 `triggered`；已解决通知由 `data.activity.type = status_resolved` 确定，`data.issue.status = resolved` 与其一致。
-- 标题：**问题已解决 / Issue resolved**，绿色标题栏。不区分首次解决与再次解决。
+- 标题：`{环境} · 已解决`（没有环境就只写"已解决"），英文 `{environment} · Resolved`。绿色标题栏。不区分首次解决与再次解决。“问题已解决”过于啰嗦，实现里改成了更短的“已解决”。
 - 表达 Sentry 问题被标记为已解决，不承诺业务恢复或故障根因已修复。生成一张新通知，不假设原错误告警卡片会同步更新。
 - 样本没有环境、解决时间、release 或 Flutter 上下文，因此不展示这些字段。
 - `firstSeen`、`lastSeen` 不是解决时间；顶层 `actor.name = Sentry` 不是执行解决操作的用户；`assignedTo = null` 也不能代替操作人。
