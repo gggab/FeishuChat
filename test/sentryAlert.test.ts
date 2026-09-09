@@ -1,11 +1,17 @@
 import crypto from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { AlertField, ContentBlock } from '../src/feishuCard.js';
 import { parseSentryAlert, verifySentrySignature } from '../src/sentryAlert.js';
 
 const SENTRY_SECRET = 'sentry-client-secret';
 
 function sign(body: string, secret = SENTRY_SECRET): string {
   return crypto.createHmac('sha256', secret).update(body, 'utf8').digest('hex');
+}
+
+/** Flatten all fields out of blocks, regardless of 'full'/'short' kind, for content assertions. */
+function allFields(blocks: ContentBlock[]): AlertField[] {
+  return blocks.flatMap((b) => (b.kind === 'full' ? [b.field] : b.fields));
 }
 
 describe('verifySentrySignature', () => {
@@ -22,7 +28,7 @@ describe('verifySentrySignature', () => {
 });
 
 describe('parseSentryAlert', () => {
-  it('event_alert: extracts summary, level, triggered rule (standalone) and web_url as the link', () => {
+  it('event_alert: extracts summary, level, event time, triggered rule, location hint, release, and web_url as the link', () => {
     const msg = parseSentryAlert('event_alert', {
       action: 'triggered',
       data: {
@@ -31,27 +37,74 @@ describe('parseSentryAlert', () => {
           title: 'TypeError: Cannot read properties of undefined',
           culprit: 'app.handler in process',
           level: 'error',
+          datetime: '2026-09-09T10:05:18.224000Z',
+          release: 'std-smart-office-dashboard@1.9.1+local',
           url: 'https://sentry.example.com/api/0/projects/org/my-project/events/1/',
           web_url: 'https://sentry.example.com/issues/123/',
         },
       },
     });
-    expect(msg.titleKey).toBe('ruleAlert');
+    expect(msg.titleKey).toBe('errorAlert');
     expect(msg.summary).toContain('TypeError');
     expect(msg.color).toBe('red');
-    expect(msg.fields).toContainEqual({ labelKey: 'level', value: 'error' });
-    expect(msg.standaloneFieldsBefore).toContainEqual({ labelKey: 'triggeredRule', value: 'Production error alert' });
-    expect(msg.trailingField).toEqual({ labelKey: 'locationHint', value: 'app.handler in process' });
+    const fields = allFields(msg.blocks);
+    expect(fields).toContainEqual({ labelKey: 'level', value: 'error' });
+    expect(fields).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 13:05:18 (UTC+03:00)' });
+    expect(fields).toContainEqual({ labelKey: 'triggeredRule', value: 'Production error alert' });
+    expect(fields).toContainEqual({ labelKey: 'locationHint', value: 'app.handler in process' });
+    expect(fields).toContainEqual({ labelKey: 'release', value: 'std-smart-office-dashboard@1.9.1+local' });
+    // release is a standalone full-width row, not packed into the level/time/rule/location short group
+    expect(msg.blocks.find((b) => b.kind === 'full' && b.field.labelKey === 'release')).toBeDefined();
     // must use web_url (user-facing), never the API url even though both are present
     expect(msg.url).toBe('https://sentry.example.com/issues/123/');
   });
 
-  it('event_alert: missing triggered_rule is omitted entirely, not shown as a placeholder', () => {
+  it('event_alert: missing triggered_rule/release/time is omitted entirely, not shown as a placeholder', () => {
     const msg = parseSentryAlert('event_alert', {
       action: 'triggered',
       data: { event: { title: 'x', level: 'error' } },
     });
-    expect(msg.standaloneFieldsBefore).toEqual([]);
+    const fields = allFields(msg.blocks);
+    expect(fields.some((f) => f.labelKey === 'triggeredRule')).toBe(false);
+    expect(fields.some((f) => f.labelKey === 'release')).toBe(false);
+    expect(fields.some((f) => f.labelKey === 'eventTime')).toBe(false);
+    expect(fields).toContainEqual({ labelKey: 'level', value: 'error' });
+  });
+
+  it('event_alert: Flutter context (module_crash/device/app) adds crash module, device and app version', () => {
+    const msg = parseSentryAlert('event_alert', {
+      action: 'triggered',
+      data: {
+        event: {
+          title: 'x',
+          level: 'error',
+          contexts: {
+            module_crash: { module: 'library_base', function: 'DioUtil.get', crash_location: 'library_base/net/dio_util.dart:149' },
+            device: { model: 'Pixel 4' },
+            os: { os: 'Android 13' },
+            app: { app_version: '2.9.2', app_build: '260901001' },
+          },
+        },
+      },
+    });
+    const fields = allFields(msg.blocks);
+    expect(fields).toContainEqual({ labelKey: 'crashModule', value: 'library_base · DioUtil.get（library_base/net/dio_util.dart:149）' });
+    expect(fields).toContainEqual({ labelKey: 'device', value: 'Pixel 4 · Android 13' });
+    expect(fields).toContainEqual({ labelKey: 'appVersion', value: '2.9.2 (260901001)' });
+    // device/appVersion flow together as a short (paired) block, distinct from the full-width crash module row
+    expect(msg.blocks.find((b) => b.kind === 'full' && b.field.labelKey === 'crashModule')).toBeDefined();
+    expect(msg.blocks.find((b) => b.kind === 'short' && b.fields.some((f) => f.labelKey === 'device'))).toBeDefined();
+  });
+
+  it('event_alert: no device/app/module_crash context -> no Flutter-only fields (Web case)', () => {
+    const msg = parseSentryAlert('event_alert', {
+      action: 'triggered',
+      data: { event: { title: 'x', level: 'error', contexts: { browser: { name: 'Chrome' } } } },
+    });
+    const fields = allFields(msg.blocks);
+    expect(fields.some((f) => f.labelKey === 'crashModule')).toBe(false);
+    expect(fields.some((f) => f.labelKey === 'device')).toBe(false);
+    expect(fields.some((f) => f.labelKey === 'appVersion')).toBe(false);
   });
 
   it('event_alert: extracts environment from the event tags (array-pair form) for the header only', () => {
@@ -97,7 +150,7 @@ describe('parseSentryAlert', () => {
     expect(critical.color).toBe('red');
     expect(critical.titleKey).toBe('metricCritical');
     expect(critical.summary).toBe('API error rate');
-    expect(critical.fields).toContainEqual({ labelKey: 'status', value: 'critical' });
+    expect(allFields(critical.blocks)).toContainEqual({ labelKey: 'status', value: 'critical' });
     expect(critical.url).toBe('https://sentry.example.com/alerts/1/');
 
     const warning = parseSentryAlert('metric_alert', {
@@ -119,8 +172,8 @@ describe('parseSentryAlert', () => {
       data: { metric_alert: { title: 'API error rate' } },
     });
     expect(unknownAction.titleKey).toBe('notification');
-    expect(unknownAction.fields).toContainEqual({ labelKey: 'resourceType', value: 'metric_alert' });
-    expect(unknownAction.fields).toContainEqual({ labelKey: 'action', value: 'something_else' });
+    expect(allFields(unknownAction.blocks)).toContainEqual({ labelKey: 'resourceType', value: 'metric_alert' });
+    expect(allFields(unknownAction.blocks)).toContainEqual({ labelKey: 'action', value: 'something_else' });
   });
 
   it('metric_alert: extracts environment from the alert rule scope when set', () => {
@@ -136,25 +189,25 @@ describe('parseSentryAlert', () => {
       action: 'critical',
       data: { metric_alert: { title: 'x' }, description_text: 'plain description' },
     });
-    expect(withText.trailingField).toEqual({ labelKey: 'alertDescription', value: 'plain description' });
+    expect(withText.blocks.find((b) => b.kind === 'full')).toEqual({ kind: 'full', field: { labelKey: 'alertDescription', value: 'plain description' } });
 
     const htmlFallback = parseSentryAlert('metric_alert', {
       action: 'critical',
       data: { metric_alert: { title: 'x' }, description: '<p>rich <b>description</b></p>' },
     });
-    expect(htmlFallback.trailingField).toEqual({ labelKey: 'alertDescription', value: 'rich description' });
+    expect(htmlFallback.blocks.find((b) => b.kind === 'full')).toEqual({ kind: 'full', field: { labelKey: 'alertDescription', value: 'rich description' } });
   });
 
   it('unknown resource falls back to a generic structure with the raw resource/action preserved', () => {
     const msg = parseSentryAlert('comment', { action: 'created' });
     expect(msg.titleKey).toBe('notification');
     expect(msg.color).toBe('grey');
-    expect(msg.fields).toContainEqual({ labelKey: 'resourceType', value: 'comment' });
-    expect(msg.fields).toContainEqual({ labelKey: 'action', value: 'created' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'resourceType', value: 'comment' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'action', value: 'created' });
     expect(msg.summary).toBeUndefined();
   });
 
-  it('error: extracts summary, level, culprit, web_url, and falls back to the URL for a project slug', () => {
+  it('error: unified into the same "错误告警" card as event_alert — summary, level, culprit, web_url, project slug from URL', () => {
     const msg = parseSentryAlert('error', {
       action: 'created',
       data: {
@@ -168,10 +221,10 @@ describe('parseSentryAlert', () => {
         },
       },
     });
-    expect(msg.titleKey).toBe('error');
+    expect(msg.titleKey).toBe('errorAlert');
     expect(msg.summary).toContain('ReferenceError');
     expect(msg.color).toBe('red');
-    expect(msg.trailingField).toEqual({ labelKey: 'locationHint', value: 'poll(views.js)' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'locationHint', value: 'poll(views.js)' });
     expect(msg.projectId).toBe('4');
     expect(msg.projectSlug).toBe('my-project');
     expect(msg.url).toBe('https://sentry.example.com/organizations/org/issues/1/events/1/');
@@ -184,8 +237,8 @@ describe('parseSentryAlert', () => {
     });
     expect(created.titleKey).toBe('issueCreated');
     expect(created.color).toBe('red');
-    expect(created.fields).toContainEqual({ labelKey: 'action', value: 'created' });
-    expect(created.fields).toContainEqual({ labelKey: 'level', value: 'error' });
+    expect(allFields(created.blocks)).toContainEqual({ labelKey: 'action', value: 'created' });
+    expect(allFields(created.blocks)).toContainEqual({ labelKey: 'level', value: 'error' });
     expect(created.projectId).toBe('4');
     expect(created.projectSlug).toBe('p');
     expect(created.projectName).toBe('P');
@@ -197,8 +250,8 @@ describe('parseSentryAlert', () => {
     expect(resolved.titleKey).toBe('issueResolved');
     expect(resolved.color).toBe('green');
     // resolved relabels the level field to avoid implying it's still that severity
-    expect(resolved.fields).toContainEqual({ labelKey: 'originalLevel', value: 'error' });
-    expect(resolved.fields.some((f) => f.labelKey === 'level')).toBe(false);
+    expect(allFields(resolved.blocks)).toContainEqual({ labelKey: 'originalLevel', value: 'error' });
+    expect(allFields(resolved.blocks).some((f) => f.labelKey === 'level')).toBe(false);
 
     const assigned = parseSentryAlert('issue', { action: 'assigned', data: { issue: { title: 'x', level: 'warning' } } });
     expect(assigned.titleKey).toBe('issueAssigned');
@@ -216,8 +269,8 @@ describe('parseSentryAlert', () => {
   it('issue: unrecognized action falls back to the generic structure', () => {
     const msg = parseSentryAlert('issue', { action: 'ignored', data: { issue: { title: 'x' } } });
     expect(msg.titleKey).toBe('notification');
-    expect(msg.fields).toContainEqual({ labelKey: 'resourceType', value: 'issue' });
-    expect(msg.fields).toContainEqual({ labelKey: 'action', value: 'ignored' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'resourceType', value: 'issue' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'action', value: 'ignored' });
   });
 
   it('activity_alert: status_resolved renders like a resolved issue and still extracts project for routing', () => {
@@ -237,9 +290,9 @@ describe('parseSentryAlert', () => {
     });
     expect(msg.titleKey).toBe('issueResolved');
     expect(msg.color).toBe('green');
-    expect(msg.fields).toContainEqual({ labelKey: 'action', value: 'resolved' });
-    expect(msg.fields).toContainEqual({ labelKey: 'originalLevel', value: 'error' });
-    expect(msg.trailingField).toEqual({ labelKey: 'locationHint', value: 'Screen' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'action', value: 'resolved' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'originalLevel', value: 'error' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'locationHint', value: 'Screen' });
     expect(msg.url).toBe('https://sentry.example.com/organizations/org/issues/22/');
     // this is the routing-critical part: project must be extracted even though this resource
     // type isn't the classic 'issue' one, otherwise per-project chat routing silently breaks
@@ -262,7 +315,7 @@ describe('parseSentryAlert', () => {
     });
     expect(msg.titleKey).toBe('notification');
     expect(msg.color).toBe('grey');
-    expect(msg.fields).toContainEqual({
+    expect(allFields(msg.blocks)).toContainEqual({
       labelKey: 'resourceType',
       value: 'activity_alert:status_regressed_or_whatever_it_actually_is',
     });

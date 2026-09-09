@@ -1,0 +1,2377 @@
+{
+    "action": "triggered",
+    "installation": {
+        "uuid": "19bfdda7-80b5-4613-9134-c181a9eb7460"
+    },
+    "data": {
+        "event": {
+            "event_id": "2e65de09b9824c89a2273dde564178fe",
+            "project": 3,
+            "release": "smart-office-flutter@2.9.2+260901001",
+            "dist": "260901001",
+            "platform": "other",
+            "message": "[library_base] DioException [connection error]: The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.\nError: SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524 @ library_base/net/dio_util.dart:149",
+            "datetime": "2026-09-09T10:05:58.705000Z",
+            "tags": [
+                [
+                    "crash_location",
+                    "library_base/net/dio_util.dart:149"
+                ],
+                [
+                    "dart",
+                    "Dart 3.11.5 (stable)"
+                ],
+                [
+                    "dart.name",
+                    "Dart"
+                ],
+                [
+                    "device",
+                    "Pixel 4"
+                ],
+                [
+                    "device.class",
+                    "2"
+                ],
+                [
+                    "device.family",
+                    "Pixel"
+                ],
+                [
+                    "environment",
+                    "test"
+                ],
+                [
+                    "error_type",
+                    "network"
+                ],
+                [
+                    "event.environment",
+                    "dart"
+                ],
+                [
+                    "event.origin",
+                    "flutter"
+                ],
+                [
+                    "flutter.name",
+                    "Flutter"
+                ],
+                [
+                    "flutter0",
+                    "Flutter 3.41.9 (stable)"
+                ],
+                [
+                    "flutter0.name",
+                    "Flutter"
+                ],
+                [
+                    "interface_type",
+                    "exception"
+                ],
+                [
+                    "level",
+                    "error"
+                ],
+                [
+                    "logger",
+                    "library_base"
+                ],
+                [
+                    "mechanism",
+                    "generic"
+                ],
+                [
+                    "module",
+                    "library_base"
+                ],
+                [
+                    "os",
+                    "Android 13"
+                ],
+                [
+                    "os.build",
+                    "TP1A.221005.002.B2"
+                ],
+                [
+                    "os.name",
+                    "Android"
+                ],
+                [
+                    "os.rooted",
+                    "no"
+                ],
+                [
+                    "dist",
+                    "260901001"
+                ],
+                [
+                    "release",
+                    "smart-office-flutter@2.9.2+260901001"
+                ],
+                [
+                    "user",
+                    "id:601fdd308fa6431bb09aace483fe514c"
+                ],
+                [
+                    "url",
+                    "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/version-check"
+                ]
+            ],
+            "_dsc": {
+                "environment": "test",
+                "public_key": "8224c3700eefa6bcb6e8837875275266",
+                "release": "smart-office-flutter@2.9.2+260901001",
+                "replay_id": null,
+                "trace_id": "b2a62e714d8a44859c5dc0e8e715768d",
+                "transaction": null
+            },
+            "_fingerprint_info": {
+                "client_fingerprint": [
+                    "{{ default }}",
+                    "library_base"
+                ]
+            },
+            "_meta": {
+                "breadcrumbs": {
+                    "values": {
+                        "22": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 89,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "23": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 85,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "24": {
+                            "message": {
+                                "": {
+                                    "len": 153,
+                                    "rem": [
+                                        [
+                                            "@password:filter",
+                                            "s",
+                                            0,
+                                            10
+                                        ]
+                                    ]
+                                }
+                            }
+                        },
+                        "27": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 82,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "29": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 84,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "75": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 85,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "77": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 89,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "78": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 82,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "79": {
+                            "message": {
+                                "": {
+                                    "len": 389,
+                                    "rem": [
+                                        [
+                                            "@password:filter",
+                                            "s",
+                                            0,
+                                            10
+                                        ]
+                                    ]
+                                }
+                            }
+                        },
+                        "81": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 82,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "82": {
+                            "message": {
+                                "": {
+                                    "len": 390,
+                                    "rem": [
+                                        [
+                                            "@password:filter",
+                                            "s",
+                                            0,
+                                            10
+                                        ]
+                                    ]
+                                }
+                            }
+                        },
+                        "83": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 82,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "84": {
+                            "message": {
+                                "": {
+                                    "len": 390,
+                                    "rem": [
+                                        [
+                                            "@password:filter",
+                                            "s",
+                                            0,
+                                            10
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "_metrics": {
+                "bytes.ingested.event": 41096,
+                "bytes.stored.event": 43069
+            },
+            "_ref": 3,
+            "_ref_version": 2,
+            "breadcrumbs": {
+                "values": [
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.152540",
+                            "end_timestamp": 1788876802153,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788876802001,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876802.153,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.215876",
+                            "end_timestamp": 1788876832214,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788876831999,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876832.214,
+                        "type": "http"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "BATTERY_CHANGED",
+                            "charging": false,
+                            "level": 49
+                        },
+                        "level": "info",
+                        "timestamp": 1788876842.487,
+                        "type": "system"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.203487",
+                            "end_timestamp": 1788876862202,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788876861999,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876862.202,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.118902",
+                            "end_timestamp": 1788876892118,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788876892000,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876892.118,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.137574",
+                            "end_timestamp": 1788876922140,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788876922003,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876922.14,
+                        "type": "http"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "paused"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876952.392,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "stopped"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876952.424,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "saveInstanceState"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876952.431,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "DREAMING_STARTED"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876952.593,
+                        "type": "system"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "SCREEN_OFF"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876952.731,
+                        "type": "system"
+                    },
+                    {
+                        "category": "app.lifecycle",
+                        "data": {
+                            "state": "background"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876953.095,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:04.374165",
+                            "end_timestamp": 1788876956375,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788876952001,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788876956.375,
+                        "type": "http"
+                    },
+                    {
+                        "category": "device.orientation",
+                        "data": {
+                            "position": "portrait"
+                        },
+                        "level": "info",
+                        "timestamp": 1788883201.027,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "device.orientation",
+                        "data": {
+                            "position": "portrait"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938629.949,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "started"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938629.968,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "app.lifecycle",
+                        "data": {
+                            "state": "foreground"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938629.984,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "resumed"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938629.988,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/home",
+                            "state": "didPush",
+                            "to": "/login"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938630.283,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[SO][2026-09-09 10:23:50][E][DioUtil] GET /std-smart-office-user/v1/app/user/details failed: The request was manually cancelled by the user",
+                        "timestamp": 1788938630.708,
+                        "type": "debug"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.573546",
+                            "end_timestamp": 1788938630804,
+                            "method": "GET",
+                            "start_timestamp": 1788938630231,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/details"
+                        },
+                        "level": "error",
+                        "timestamp": 1788938630.804,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.620847",
+                            "end_timestamp": 1788938630865,
+                            "http.query": "platform=Android&currentVersion=2.9.2",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938630245,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/version-check"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938630.865,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.512864",
+                            "end_timestamp": 1788938630865,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938630353,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938630.865,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.619993",
+                            "end_timestamp": 1788938630865,
+                            "method": "POST",
+                            "reason": "OK",
+                            "response_body_size": 129,
+                            "start_timestamp": 1788938630246,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938630.865,
+                        "type": "http"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[Filtered]",
+                        "timestamp": 1788938630.869,
+                        "type": "debug"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[SO][2026-09-09 10:23:50][W][AppInit] backend logout failed: Token invalid or expired,please login again",
+                        "timestamp": 1788938630.869,
+                        "type": "debug"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "BATTERY_CHANGED",
+                            "charging": false,
+                            "level": 34
+                        },
+                        "level": "info",
+                        "timestamp": 1788938636.292,
+                        "type": "system"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:02.767700",
+                            "end_timestamp": 1788938637507,
+                            "method": "POST",
+                            "reason": "OK",
+                            "start_timestamp": 1788938634740,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938637.507,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/login",
+                            "state": "didPush",
+                            "to": "/login/otp"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938637.512,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.139066",
+                            "end_timestamp": 1788938647271,
+                            "method": "POST",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647132,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.271,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/login/otp",
+                            "state": "didPush",
+                            "to": "/home"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.277,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/home",
+                            "state": "didReplace",
+                            "to": "/home"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.277,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.206138",
+                            "end_timestamp": 1788938647521,
+                            "http.query": "platform=Android&currentVersion=2.9.2",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647315,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/version-check"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.521,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.181951",
+                            "end_timestamp": 1788938647545,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647364,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/settings/query/apk/banner"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.545,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.226984",
+                            "end_timestamp": 1788938647546,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647320,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/menus"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.546,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.222693",
+                            "end_timestamp": 1788938647546,
+                            "http.query": "platform=Android&currentVersion=2.9.2",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647324,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/version-check"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.546,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.225172",
+                            "end_timestamp": 1788938647546,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647321,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/menus"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.546,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.229081",
+                            "end_timestamp": 1788938647547,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647318,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.547,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.231208",
+                            "end_timestamp": 1788938647553,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647322,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/details"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.553,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.257836",
+                            "end_timestamp": 1788938647577,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647320,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-ai/v1/api/Voiceprint/check/registration"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.577,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.295475",
+                            "end_timestamp": 1788938647618,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647323,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/qrcode"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.618,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.103876",
+                            "end_timestamp": 1788938647661,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647558,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.661,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.124507",
+                            "end_timestamp": 1788938647788,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647664,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/menus"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.788,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.125731",
+                            "end_timestamp": 1788938647789,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938647664,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938647.789,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.128238",
+                            "end_timestamp": 1788938648340,
+                            "method": "POST",
+                            "reason": "OK",
+                            "start_timestamp": 1788938648212,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-notification/api/v1/notification/pn/register"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938648.34,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/home",
+                            "state": "didPush",
+                            "to": "/home/notification"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938665.305,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.178753",
+                            "end_timestamp": 1788938665497,
+                            "http.query": "pageNum=1&pageSize=10",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938665319,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-notification/api/v1/notification/page"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938665.497,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.107757",
+                            "end_timestamp": 1788938665617,
+                            "method": "PUT",
+                            "reason": "OK",
+                            "start_timestamp": 1788938665510,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-notification/api/v1/notification/read"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938665.617,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/home/notification",
+                            "state": "didPop",
+                            "to": "/home"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938666.259,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.138330",
+                            "end_timestamp": 1788938666409,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938666271,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938666.409,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.137369",
+                            "end_timestamp": 1788938666409,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938666272,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/menus"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938666.409,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.148107",
+                            "end_timestamp": 1788938666421,
+                            "http.query": "pageNum=1&pageSize=10",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938666273,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-notification/api/v1/notification/page"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938666.421,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.149714",
+                            "end_timestamp": 1788938666424,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938666275,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-ai/v1/api/Voiceprint/check/registration"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938666.424,
+                        "type": "http"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "POWER_SAVE_MODE_CHANGED"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938667.948,
+                        "type": "system"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/home",
+                            "state": "didPush",
+                            "to": "/clock-in/home"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938679.294,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.323253",
+                            "end_timestamp": 1788938679636,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938679313,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/location/list"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938679.636,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.665351",
+                            "end_timestamp": 1788938679980,
+                            "http.query": "startDay=2026-09-06&endDay=2026-09-12",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938679315,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-attendance/v1/app/user/record/query"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938679.98,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/clock-in/home",
+                            "state": "didPush",
+                            "to": "/clock-in/statistic"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938690.992,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.150486",
+                            "end_timestamp": 1788938691173,
+                            "http.query": "startDay=2026-09-01&endDay=2026-09-30",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938691023,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-attendance/v1/app/user/record/query"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938691.173,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/clock-in/statistic",
+                            "state": "didPush",
+                            "to": "/clock-in/record"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938701.669,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.141267",
+                            "end_timestamp": 1788938701824,
+                            "http.query": "startDay=2026-09-09&endDay=2026-09-09",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938701683,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-attendance/v1/app/user/record/query"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938701.824,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/clock-in/record",
+                            "state": "didPop",
+                            "to": "/clock-in/statistic"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938704.276,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/clock-in/statistic",
+                            "state": "didPop",
+                            "to": "/clock-in/home"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938704.851,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.275864",
+                            "end_timestamp": 1788938705129,
+                            "http.query": "startDay=2026-09-06&endDay=2026-09-12",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938704854,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-attendance/v1/app/user/record/query"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938705.129,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/clock-in/home",
+                            "state": "didPop",
+                            "to": "/home"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938705.631,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "BATTERY_CHANGED",
+                            "charging": false,
+                            "level": 33
+                        },
+                        "level": "info",
+                        "timestamp": 1788938705.702,
+                        "type": "system"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.316489",
+                            "end_timestamp": 1788938705950,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938705634,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/activities"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938705.95,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.314389",
+                            "end_timestamp": 1788938705950,
+                            "http.query": "pageNum=1&pageSize=10",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938705636,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-notification/api/v1/notification/page"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938705.95,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.315661",
+                            "end_timestamp": 1788938705950,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938705635,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/user/menus"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938705.95,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.356297",
+                            "end_timestamp": 1788938705993,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938705637,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-ai/v1/api/Voiceprint/check/registration"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938705.993,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.128646",
+                            "end_timestamp": 1788938710996,
+                            "http.query": "platform=Android&currentVersion=2.9.2",
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938710868,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/version-check"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938710.996,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.131478",
+                            "end_timestamp": 1788938710996,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938710865,
+                            "status_code": 200,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-ai/v1/api/Voiceprint/check/registration"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938710.996,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/home",
+                            "state": "didPush"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938712.116,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.click",
+                        "data": {
+                            "path": [
+                                {
+                                    "element": "InkWell"
+                                },
+                                {
+                                    "element": "Column"
+                                },
+                                {
+                                    "element": "Column"
+                                },
+                                {
+                                    "element": "Padding"
+                                },
+                                {
+                                    "element": "DecoratedBox"
+                                },
+                                {
+                                    "element": "Container"
+                                },
+                                {
+                                    "element": "Column"
+                                },
+                                {
+                                    "element": "ProfileMenuSectionWidget"
+                                },
+                                {
+                                    "element": "Column"
+                                },
+                                {
+                                    "element": "Padding"
+                                }
+                            ],
+                            "view.class": "InkWell"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938712.769,
+                        "type": "user"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "state": "didPop",
+                            "to": "/home"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938712.769,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.247097",
+                            "end_timestamp": 1788938713018,
+                            "method": "POST",
+                            "reason": "OK",
+                            "start_timestamp": 1788938712771,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938713.018,
+                        "type": "http"
+                    },
+                    {
+                        "category": "navigation",
+                        "data": {
+                            "from": "/home",
+                            "state": "didPush",
+                            "to": "/login"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938713.036,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.116053",
+                            "end_timestamp": 1788938713168,
+                            "method": "GET",
+                            "reason": "OK",
+                            "start_timestamp": 1788938713052,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938713.168,
+                        "type": "http"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:02.252412",
+                            "end_timestamp": 1788938864323,
+                            "method": "POST",
+                            "reason": "OK",
+                            "start_timestamp": 1788938862071,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938864.323,
+                        "type": "http"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[Filtered]",
+                        "timestamp": 1788938864.33,
+                        "type": "debug"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "BATTERY_CHANGED",
+                            "charging": false,
+                            "level": 32
+                        },
+                        "level": "info",
+                        "timestamp": 1788938868.6,
+                        "type": "system"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:01.656313",
+                            "end_timestamp": 1788938872311,
+                            "method": "POST",
+                            "reason": "OK",
+                            "start_timestamp": 1788938870655,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938872.311,
+                        "type": "http"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[Filtered]",
+                        "timestamp": 1788938872.326,
+                        "type": "debug"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:01.616834",
+                            "end_timestamp": 1788938882347,
+                            "method": "POST",
+                            "reason": "OK",
+                            "start_timestamp": 1788938880731,
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788938882.347,
+                        "type": "http"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[Filtered]",
+                        "timestamp": 1788938882.355,
+                        "type": "debug"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "BATTERY_CHANGED",
+                            "charging": false,
+                            "level": 31
+                        },
+                        "level": "info",
+                        "timestamp": 1788939018.238,
+                        "type": "system"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "BATTERY_CHANGED",
+                            "charging": false,
+                            "level": 29
+                        },
+                        "level": "info",
+                        "timestamp": 1788939178.411,
+                        "type": "system"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "paused"
+                        },
+                        "level": "info",
+                        "timestamp": 1788939186.343,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "stopped"
+                        },
+                        "level": "info",
+                        "timestamp": 1788939186.403,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "saveInstanceState"
+                        },
+                        "level": "info",
+                        "timestamp": 1788939186.408,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "DREAMING_STARTED"
+                        },
+                        "level": "info",
+                        "timestamp": 1788939186.528,
+                        "type": "system"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "SCREEN_OFF"
+                        },
+                        "level": "info",
+                        "timestamp": 1788939186.682,
+                        "type": "system"
+                    },
+                    {
+                        "category": "app.lifecycle",
+                        "data": {
+                            "state": "background"
+                        },
+                        "level": "info",
+                        "timestamp": 1788939187.061,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "started"
+                        },
+                        "level": "info",
+                        "timestamp": 1788948358.284,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "app.lifecycle",
+                        "data": {
+                            "state": "foreground"
+                        },
+                        "level": "info",
+                        "timestamp": 1788948358.285,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "ui.lifecycle",
+                        "data": {
+                            "screen": "MainActivity",
+                            "state": "resumed"
+                        },
+                        "level": "info",
+                        "timestamp": 1788948358.286,
+                        "type": "navigation"
+                    },
+                    {
+                        "category": "device.event",
+                        "data": {
+                            "action": "DEVICE_IDLE_MODE_CHANGED"
+                        },
+                        "level": "info",
+                        "timestamp": 1788948358.635,
+                        "type": "system"
+                    },
+                    {
+                        "category": "http",
+                        "data": {
+                            "duration": "0:00:00.017279",
+                            "end_timestamp": 1788948358702,
+                            "http.query": "platform=Android&currentVersion=2.9.2",
+                            "method": "GET",
+                            "start_timestamp": 1788948358685,
+                            "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/version-check"
+                        },
+                        "level": "error",
+                        "timestamp": 1788948358.702,
+                        "type": "http"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[SO][2026-09-09 13:05:58][E][DioUtil] GET /std-smart-office-user/v1/app/version-check failed: Network error\n  ↳ SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524",
+                        "timestamp": 1788948358.705,
+                        "type": "debug"
+                    },
+                    {
+                        "category": "console",
+                        "level": "debug",
+                        "message": "[SO][2026-09-09 13:05:58][W][AppUpgrade] version-check failed: Network error",
+                        "timestamp": 1788948358.705,
+                        "type": "debug"
+                    }
+                ]
+            },
+            "contexts": {
+                "accessibility": {
+                    "accessible_navigation": false,
+                    "bold_text": false,
+                    "disable_animations": false,
+                    "high_contrast": false,
+                    "invert_colors": false,
+                    "reduce_motion": false,
+                    "type": "accessibility"
+                },
+                "app": {
+                    "app_build": "260901001",
+                    "app_identifier": "com.sensetime.ibg.jv.std.office",
+                    "app_memory": 236421120,
+                    "app_name": "MEA Smart Office",
+                    "app_start_time": "2026-09-08T11:32:07.913Z",
+                    "app_version": "2.9.2",
+                    "in_foreground": true,
+                    "is_split_apks": false,
+                    "permissions": {
+                        "ACCESS_ADSERVICES_AD_ID": "granted",
+                        "ACCESS_ADSERVICES_ATTRIBUTION": "granted",
+                        "ACCESS_COARSE_LOCATION": "granted",
+                        "ACCESS_FINE_LOCATION": "granted",
+                        "ACCESS_NETWORK_STATE": "granted",
+                        "AD_ID": "granted",
+                        "BIND_GET_INSTALL_REFERRER_SERVICE": "granted",
+                        "BLUETOOTH": "granted",
+                        "BLUETOOTH_ADMIN": "granted",
+                        "BLUETOOTH_ADVERTISE": "not_granted",
+                        "BLUETOOTH_CONNECT": "not_granted",
+                        "BLUETOOTH_SCAN": "not_granted",
+                        "CAMERA": "granted",
+                        "DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION": "granted",
+                        "FOREGROUND_SERVICE": "granted",
+                        "FOREGROUND_SERVICE_MICROPHONE": "not_granted",
+                        "HIGH_SAMPLING_RATE_SENSORS": "granted",
+                        "INTERNET": "granted",
+                        "MODIFY_AUDIO_SETTINGS": "granted",
+                        "POST_NOTIFICATIONS": "granted",
+                        "PROCESS_PUSH_MSG": "granted",
+                        "PUSH_PROVIDER": "granted",
+                        "RECEIVE": "granted",
+                        "RECEIVE_BOOT_COMPLETED": "granted",
+                        "RECORD_AUDIO": "granted",
+                        "VIBRATE": "granted",
+                        "WAKE_LOCK": "granted"
+                    },
+                    "text_scale": 1,
+                    "type": "app",
+                    "view_names": [
+                        "/login"
+                    ]
+                },
+                "culture": {
+                    "is_24_hour_format": true,
+                    "locale": "zh-Hans-CN",
+                    "timezone": "+03",
+                    "type": "culture"
+                },
+                "dart": {
+                    "name": "Dart",
+                    "raw_description": "3.11.5 (stable) (Wed Apr 15 00:36:32 2026 -0700) on \"android_arm64\"",
+                    "runtime": "Dart 3.11.5 (stable)",
+                    "type": "runtime",
+                    "version": "3.11.5 (stable)"
+                },
+                "dart_context": {
+                    "compile_mode": "release",
+                    "type": "dart_context"
+                },
+                "device": {
+                    "archs": [
+                        "arm64-v8a",
+                        "armeabi-v7a",
+                        "armeabi"
+                    ],
+                    "battery_level": 27.000002,
+                    "battery_temperature": 21.7,
+                    "boot_time": "2026-08-30T07:22:56.444Z",
+                    "brand": "google",
+                    "charging": false,
+                    "chipset": "Qualcomm SM8150",
+                    "connection_type": "wifi",
+                    "family": "Pixel",
+                    "free_memory": 1362759680,
+                    "free_storage": 2347061248,
+                    "id": "601fdd308fa6431bb09aace483fe514c",
+                    "locale": "zh_CN_#Hans",
+                    "low_memory": false,
+                    "manufacturer": "Google",
+                    "memory_size": 5730922496,
+                    "model": "Pixel 4",
+                    "model_id": "TP1A.221005.002.B2",
+                    "name": "Pixel 4",
+                    "online": true,
+                    "orientation": "portrait",
+                    "processor_count": 8,
+                    "processor_frequency": 2841,
+                    "screen_density": 2.75,
+                    "screen_dpi": 440,
+                    "screen_height_pixels": 2214,
+                    "screen_width_pixels": 1080,
+                    "simulator": false,
+                    "storage_size": 53684973568,
+                    "timezone": "Asia/Riyadh",
+                    "type": "device"
+                },
+                "flutter": {
+                    "compiler": "Dart AOT",
+                    "name": "Flutter",
+                    "type": "runtime"
+                },
+                "flutter0": {
+                    "build": "00b0c91f06",
+                    "name": "Flutter",
+                    "raw_description": "3.41.9 (stable) - Git hash 00b0c91f06 - Git URL https://github.com/flutter/flutter.git",
+                    "runtime": "Flutter 3.41.9 (stable)",
+                    "type": "runtime",
+                    "version": "3.41.9 (stable)"
+                },
+                "flutter_context": {
+                    "current_lifecycle_state": "resumed",
+                    "default_route_name": "/",
+                    "has_render_view": "true",
+                    "initial_lifecycle_state": "AppLifecycleState.resumed",
+                    "type": "flutter_context"
+                },
+                "http": {
+                    "type": "http",
+                    "url": "GET /std-smart-office-user/v1/app/version-check"
+                },
+                "module_crash": {
+                    "crash_location": "library_base/net/dio_util.dart:149",
+                    "crash_log": "DioException [connection error]: The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.\nError: SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524",
+                    "function": "DioUtil.get",
+                    "module": "library_base",
+                    "type": "module_crash"
+                },
+                "os": {
+                    "build": "TP1A.221005.002.B2",
+                    "kernel_version": "4.14.276-g6ef255005cea-ab9062920",
+                    "name": "Android",
+                    "os": "Android 13",
+                    "raw_description": "TP1A.221005.002.B2",
+                    "rooted": false,
+                    "theme": "light",
+                    "type": "os",
+                    "version": "13"
+                },
+                "trace": {
+                    "op": "default",
+                    "span_id": "1a34b61fc44b4237",
+                    "status": "unknown",
+                    "trace_id": "b2a62e714d8a44859c5dc0e8e715768d",
+                    "type": "trace"
+                }
+            },
+            "culprit": "library_base/net/dio_util.dart:149",
+            "environment": "test",
+            "exception": {
+                "values": [
+                    {
+                        "stacktrace": {
+                            "frames": [
+                                {
+                                    "abs_path": "package:library_base/upgrade/app_upgrade_manager.dart",
+                                    "addr_mode": null,
+                                    "colno": null,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "app_upgrade_manager.dart",
+                                    "function": "AppUpgradeManager._runCheck",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 158,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": "library_base",
+                                    "parent_index": null,
+                                    "platform": "dart",
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "package:library_base/upgrade/app_upgrade_service.dart",
+                                    "addr_mode": null,
+                                    "colno": null,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "app_upgrade_service.dart",
+                                    "function": "AppUpgradeService.checkVersion",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 26,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": "library_base",
+                                    "parent_index": null,
+                                    "platform": "dart",
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "package:library_base/net/dio_util.dart",
+                                    "addr_mode": null,
+                                    "colno": null,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "dio_util.dart",
+                                    "function": "DioUtil.get",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 149,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": "library_base",
+                                    "parent_index": null,
+                                    "platform": "dart",
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "package:dio/src/dio_mixin.dart",
+                                    "addr_mode": null,
+                                    "colno": null,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "dio_mixin.dart",
+                                    "function": "DioMixin.get",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 71,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": "dio",
+                                    "parent_index": null,
+                                    "platform": "dart",
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "package:dio/src/dio_mixin.dart",
+                                    "addr_mode": null,
+                                    "colno": null,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "dio_mixin.dart",
+                                    "function": "DioMixin.request",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 404,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": "dio",
+                                    "parent_index": null,
+                                    "platform": "dart",
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                }
+                            ]
+                        },
+                        "type": "DioException",
+                        "value": "[library_base] DioException [connection error]: The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.\nError: SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524 @ library_base/net/dio_util.dart:149"
+                    },
+                    {
+                        "mechanism": {
+                            "data": null,
+                            "description": null,
+                            "exception_id": null,
+                            "handled": null,
+                            "help_link": null,
+                            "is_exception_group": null,
+                            "meta": null,
+                            "parent_id": null,
+                            "source": "error",
+                            "synthetic": null,
+                            "type": "generic"
+                        },
+                        "type": "SocketException",
+                        "value": "SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524"
+                    }
+                ]
+            },
+            "fingerprint": [
+                "{{ default }}",
+                "library_base"
+            ],
+            "grouping_config": {
+                "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+                "id": "newstyle:2026-01-20"
+            },
+            "hashes": [
+                "3fab1e1cb375220dbfb9f6f49d1cac6b",
+                "f307efc4020e8bdd40575af62997a2ef"
+            ],
+            "key_id": "3",
+            "level": "error",
+            "location": null,
+            "logentry": {
+                "formatted": "[library_base] DioException [connection error]: The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.\nError: SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524 @ library_base/net/dio_util.dart:149",
+                "message": null,
+                "params": null
+            },
+            "logger": "library_base",
+            "metadata": {
+                "in_app_frame_mix": "in-app-only",
+                "type": "SocketException",
+                "value": "SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524"
+            },
+            "modules": {
+                "_fe_analyzer_shared": "unknown",
+                "_flutterfire_internals": "unknown",
+                "aFileChooser": "unknown",
+                "abseil-cpp": "unknown",
+                "accessibility": "unknown",
+                "analyzer": "unknown",
+                "angle": "unknown",
+                "ansicolor": "unknown",
+                "app_settings": "unknown",
+                "archive": "unknown",
+                "args": "unknown",
+                "async": "unknown",
+                "audio_session": "unknown",
+                "audioplayers": "unknown",
+                "audioplayers_android": "unknown",
+                "audioplayers_darwin": "unknown",
+                "audioplayers_linux": "unknown",
+                "audioplayers_platform_interface": "unknown",
+                "audioplayers_web": "unknown",
+                "audioplayers_windows": "unknown",
+                "benchmark": "unknown",
+                "boolean_selector": "unknown",
+                "boringssl": "unknown",
+                "brotli": "unknown",
+                "ceval": "unknown",
+                "characters": "unknown",
+                "cli_config": "unknown",
+                "clock": "unknown",
+                "code_assets": "unknown",
+                "collection": "unknown",
+                "connectivity_plus": "unknown",
+                "connectivity_plus_platform_interface": "unknown",
+                "convert": "unknown",
+                "coverage": "unknown",
+                "cpu_features": "unknown",
+                "cross_file": "unknown",
+                "crypto": "unknown",
+                "cupertino_icons": "unknown",
+                "dart": "unknown",
+                "dawn": "unknown",
+                "dbus": "unknown",
+                "devtools": "unknown",
+                "dio": "unknown",
+                "dio_web_adapter": "unknown",
+                "double-conversion": "unknown",
+                "equatable": "unknown",
+                "etc1": "unknown",
+                "etc_decoder": "unknown",
+                "expat": "unknown",
+                "fake_async": "unknown",
+                "fallback_root_certificates": "unknown",
+                "ffi": "unknown",
+                "ffx_spd": "unknown",
+                "fiat": "unknown",
+                "file": "unknown",
+                "file_selector_linux": "unknown",
+                "file_selector_macos": "unknown",
+                "file_selector_platform_interface": "unknown",
+                "file_selector_windows": "unknown",
+                "firebase_analytics": "unknown",
+                "firebase_analytics_platform_interface": "unknown",
+                "firebase_analytics_web": "unknown",
+                "firebase_core": "unknown",
+                "firebase_core_platform_interface": "unknown",
+                "firebase_core_web": "unknown",
+                "firebase_messaging": "unknown",
+                "firebase_messaging_platform_interface": "unknown",
+                "firebase_messaging_web": "unknown",
+                "fixnum": "unknown",
+                "flatbuffers": "unknown",
+                "flutter": "unknown",
+                "flutter_appauth": "unknown",
+                "flutter_appauth_platform_interface": "unknown",
+                "flutter_lints": "unknown",
+                "flutter_local_notifications": "unknown",
+                "flutter_local_notifications_linux": "unknown",
+                "flutter_local_notifications_platform_interface": "unknown",
+                "flutter_markdown": "unknown",
+                "flutter_markdown_plus": "unknown",
+                "flutter_plugin_android_lifecycle": "unknown",
+                "flutter_riverpod": "unknown",
+                "flutter_screenutil": "unknown",
+                "flutter_secure_storage": "unknown",
+                "flutter_secure_storage_darwin": "unknown",
+                "flutter_secure_storage_linux": "unknown",
+                "flutter_secure_storage_platform_interface": "unknown",
+                "flutter_secure_storage_web": "unknown",
+                "flutter_secure_storage_windows": "unknown",
+                "flutter_seeklane_wayfinding": "unknown",
+                "flutter_svg": "unknown",
+                "flutter_timezone": "unknown",
+                "freetype2": "unknown",
+                "freezed_annotation": "unknown",
+                "frontend_server_client": "unknown",
+                "fuchsia_sdk": "unknown",
+                "geolocator": "unknown",
+                "geolocator_android": "unknown",
+                "geolocator_apple": "unknown",
+                "geolocator_platform_interface": "unknown",
+                "geolocator_web": "unknown",
+                "geolocator_windows": "unknown",
+                "glfw": "unknown",
+                "glob": "unknown",
+                "globbing": "unknown",
+                "glslang": "unknown",
+                "gtest-parallel": "unknown",
+                "harfbuzz": "unknown",
+                "hooks": "unknown",
+                "http": "unknown",
+                "http_multi_server": "unknown",
+                "http_parser": "unknown",
+                "icu": "unknown",
+                "image": "unknown",
+                "image_picker": "unknown",
+                "image_picker_for_web": "unknown",
+                "image_picker_linux": "unknown",
+                "image_picker_macos": "unknown",
+                "image_picker_platform_interface": "unknown",
+                "image_picker_windows": "unknown",
+                "include": "unknown",
+                "inja": "unknown",
+                "injector": "unknown",
+                "intl": "unknown",
+                "io": "unknown",
+                "jni": "unknown",
+                "json": "unknown",
+                "json_annotation": "unknown",
+                "khronos": "unknown",
+                "leak_tracker": "unknown",
+                "leak_tracker_flutter_testing": "unknown",
+                "leak_tracker_testing": "unknown",
+                "libXNVCtrl": "unknown",
+                "libcxx": "unknown",
+                "libcxxabi": "unknown",
+                "libjpeg-turbo": "unknown",
+                "libjxl": "unknown",
+                "libpng": "unknown",
+                "library_base": "unknown",
+                "library_components": "unknown",
+                "libtess2": "unknown",
+                "libwebp": "unknown",
+                "lints": "unknown",
+                "llvm_libc": "unknown",
+                "logging": "unknown",
+                "lottie": "unknown",
+                "lunarg-vulkantools": "unknown",
+                "markdown": "unknown",
+                "matcher": "unknown",
+                "material_color_utilities": "unknown",
+                "meta": "unknown",
+                "mime": "unknown",
+                "module_aichat": "unknown",
+                "module_clockin": "unknown",
+                "module_desk": "unknown",
+                "module_food": "unknown",
+                "module_home": "unknown",
+                "module_login": "unknown",
+                "module_meeting": "unknown",
+                "module_meeting_ai": "unknown",
+                "module_room": "unknown",
+                "module_visitor": "unknown",
+                "nm": "unknown",
+                "node_preamble": "unknown",
+                "objective_c": "unknown",
+                "oktoast": "unknown",
+                "package_config": "unknown",
+                "package_info_plus": "unknown",
+                "package_info_plus_platform_interface": "unknown",
+                "path": "unknown",
+                "path_parsing": "unknown",
+                "path_provider": "unknown",
+                "path_provider_android": "unknown",
+                "path_provider_foundation": "unknown",
+                "path_provider_linux": "unknown",
+                "path_provider_platform_interface": "unknown",
+                "path_provider_windows": "unknown",
+                "perfetto": "unknown",
+                "permission_handler": "unknown",
+                "permission_handler_android": "unknown",
+                "permission_handler_apple": "unknown",
+                "permission_handler_html": "unknown",
+                "permission_handler_platform_interface": "unknown",
+                "permission_handler_windows": "unknown",
+                "petitparser": "unknown",
+                "platform": "unknown",
+                "plugin_platform_interface": "unknown",
+                "pool": "unknown",
+                "posix": "unknown",
+                "process": "unknown",
+                "process_runner": "unknown",
+                "properties": "unknown",
+                "pub_semver": "unknown",
+                "qr": "unknown",
+                "qr_flutter": "unknown",
+                "rapidjson": "unknown",
+                "re2": "unknown",
+                "record": "unknown",
+                "record_android": "unknown",
+                "record_ios": "unknown",
+                "record_linux": "unknown",
+                "record_macos": "unknown",
+                "record_platform_interface": "unknown",
+                "record_use": "unknown",
+                "record_web": "unknown",
+                "record_windows": "unknown",
+                "riverpod": "unknown",
+                "riverpod_annotation": "unknown",
+                "rxdart": "unknown",
+                "sentry": "unknown",
+                "sentry_dart_plugin": "unknown",
+                "sentry_dio": "unknown",
+                "sentry_flutter": "unknown",
+                "shaderc": "unknown",
+                "shared_preferences": "unknown",
+                "shared_preferences_android": "unknown",
+                "shared_preferences_foundation": "unknown",
+                "shared_preferences_linux": "unknown",
+                "shared_preferences_platform_interface": "unknown",
+                "shared_preferences_web": "unknown",
+                "shared_preferences_windows": "unknown",
+                "shelf": "unknown",
+                "shelf_packages_handler": "unknown",
+                "shelf_static": "unknown",
+                "shelf_web_socket": "unknown",
+                "skia": "unknown",
+                "source_map_stack_trace": "unknown",
+                "source_maps": "unknown",
+                "source_span": "unknown",
+                "spirv-cross": "unknown",
+                "spirv-tools": "unknown",
+                "spring_animation": "unknown",
+                "sqlite": "unknown",
+                "stack_trace": "unknown",
+                "state_notifier": "unknown",
+                "stream_channel": "unknown",
+                "string_scanner": "unknown",
+                "swiftshader": "unknown",
+                "sync_http": "unknown",
+                "synchronized": "unknown",
+                "system_info2": "unknown",
+                "term_glyph": "unknown",
+                "test": "unknown",
+                "test_api": "unknown",
+                "test_core": "unknown",
+                "test_shaders": "unknown",
+                "timezone": "unknown",
+                "tonic": "unknown",
+                "typed_data": "unknown",
+                "url_launcher": "unknown",
+                "url_launcher_android": "unknown",
+                "url_launcher_ios": "unknown",
+                "url_launcher_linux": "unknown",
+                "url_launcher_macos": "unknown",
+                "url_launcher_platform_interface": "unknown",
+                "url_launcher_web": "unknown",
+                "url_launcher_windows": "unknown",
+                "uuid": "unknown",
+                "vector_graphics": "unknown",
+                "vector_graphics_codec": "unknown",
+                "vector_graphics_compiler": "unknown",
+                "vector_math": "unknown",
+                "vm_service": "unknown",
+                "volk": "unknown",
+                "vulkan": "unknown",
+                "vulkan-deps": "unknown",
+                "vulkan-headers": "unknown",
+                "vulkan-tools": "unknown",
+                "vulkan-utility-libraries": "unknown",
+                "vulkan-validation-layers": "unknown",
+                "vulkan_memory_allocator": "unknown",
+                "watcher": "unknown",
+                "web": "unknown",
+                "web_locale_keymap": "unknown",
+                "web_socket_channel": "unknown",
+                "web_test_fonts": "unknown",
+                "webdriver": "unknown",
+                "webkit_inspection_protocol": "unknown",
+                "webview_flutter": "unknown",
+                "webview_flutter_android": "unknown",
+                "webview_flutter_platform_interface": "unknown",
+                "webview_flutter_wkwebview": "unknown",
+                "win32": "unknown",
+                "wuffs": "unknown",
+                "wycheproof_testvectors": "unknown",
+                "xdg_directories": "unknown",
+                "xml": "unknown",
+                "xxhash": "unknown",
+                "yaml": "unknown",
+                "yapf": "unknown",
+                "yapf_diff": "unknown",
+                "zlib": "unknown"
+            },
+            "nodestore_insert": 1788948437.901407,
+            "received": 1788948435.493253,
+            "request": {
+                "api_target": null,
+                "cookies": null,
+                "data": null,
+                "env": null,
+                "fragment": null,
+                "headers": null,
+                "inferred_content_type": null,
+                "method": "GET",
+                "query_string": [
+                    [
+                        "platform",
+                        "Android"
+                    ],
+                    [
+                        "currentVersion",
+                        "2.9.2"
+                    ]
+                ],
+                "url": "https://smartoffice-test26.sensetime-ksa.top/std-smart-office-user/v1/app/version-check"
+            },
+            "sdk": {
+                "features": [
+                    "beforeSendEvent"
+                ],
+                "integrations": [
+                    "isolateErrorIntegration",
+                    "widgetsFlutterBindingIntegration",
+                    "OnErrorIntegration",
+                    "flutterErrorIntegration",
+                    "widgetsBindingIntegration",
+                    "loadReleaseIntegration",
+                    "nativeSdkIntegration",
+                    "NativeTraceSync",
+                    "loadContextsIntegration",
+                    "NativeAppStart",
+                    "ReplayIntegration",
+                    "debugPrintIntegration",
+                    "ReplayTelemetry",
+                    "ThreadInfo",
+                    "MetricsSetup",
+                    "LoggerSetup",
+                    "InstrumentationSpanFactorySetup",
+                    "FeatureFlagsIntegration",
+                    "InMemoryTelemetryProcessor",
+                    "TrackBeforeSendUsageIntegration",
+                    "Enricher",
+                    "sentry_dio",
+                    "DioHTTPClientError",
+                    "HTTPNetworkTracing",
+                    "UserInteractionTracing",
+                    "UINavigationTracing"
+                ],
+                "name": "sentry.dart.flutter",
+                "packages": [
+                    {
+                        "name": "pub:sentry",
+                        "version": "9.29.0"
+                    },
+                    {
+                        "name": "pub:sentry_flutter",
+                        "version": "9.29.0"
+                    },
+                    {
+                        "name": "pub:sentry_dio",
+                        "version": "9.29.0"
+                    }
+                ],
+                "version": "9.29.0"
+            },
+            "timestamp": 1788948358.705,
+            "title": "SocketException: SocketException: Connection refused (OS Error: Connection refused, errno = 111), address = 10.164.18.185, port = 42524",
+            "type": "error",
+            "user": {
+                "id": "601fdd308fa6431bb09aace483fe514c",
+                "sentry_user": "id:601fdd308fa6431bb09aace483fe514c"
+            },
+            "version": "7",
+            "url": "https://sentry.sensetime-ksa.top/api/0/projects/sentry/std-smart-office-flutter/events/2e65de09b9824c89a2273dde564178fe/",
+            "web_url": "https://sentry.sensetime-ksa.top/organizations/sentry/issues/73/events/2e65de09b9824c89a2273dde564178fe/",
+            "issue_url": "https://sentry.sensetime-ksa.top/api/0/organizations/sentry/issues/73/",
+            "issue_id": "73"
+        },
+        "triggered_rule": "Smart Office Monitor"
+    },
+    "actor": {
+        "type": "application",
+        "id": "sentry",
+        "name": "Sentry"
+    }
+}

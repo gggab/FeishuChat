@@ -1,0 +1,489 @@
+{
+    "action": "triggered",
+    "installation": {
+        "uuid": "19bfdda7-80b5-4613-9134-c181a9eb7460"
+    },
+    "data": {
+        "event": {
+            "event_id": "ab8d445d76aa44da97434af38d128ce9",
+            "project": 4,
+            "release": "std-smart-office-dashboard@1.9.1+local",
+            "dist": null,
+            "platform": "javascript",
+            "message": "",
+            "datetime": "2026-09-09T10:05:18.224000Z",
+            "tags": [
+                [
+                    "browser",
+                    "Chrome 151.0.0"
+                ],
+                [
+                    "browser.name",
+                    "Chrome"
+                ],
+                [
+                    "environment",
+                    "development"
+                ],
+                [
+                    "handled",
+                    "yes"
+                ],
+                [
+                    "interface_type",
+                    "exception"
+                ],
+                [
+                    "level",
+                    "error"
+                ],
+                [
+                    "mechanism",
+                    "generic"
+                ],
+                [
+                    "os",
+                    "Windows >=10"
+                ],
+                [
+                    "os.name",
+                    "Windows"
+                ],
+                [
+                    "release",
+                    "std-smart-office-dashboard@1.9.1+local"
+                ],
+                [
+                    "user",
+                    "id:150003"
+                ],
+                [
+                    "transaction",
+                    "Screen"
+                ],
+                [
+                    "url",
+                    "http://localhost:5177/dashboard/screen"
+                ]
+            ],
+            "_dsc": {
+                "environment": "development",
+                "public_key": "e63ce2485e18ae89be579379ec16c62d",
+                "release": "std-smart-office-dashboard@1.9.1+local",
+                "replay_id": null,
+                "sample_rand": "0.4451892626894035",
+                "sample_rate": "0.2",
+                "sampled": false,
+                "trace_id": "f03ed6bec2c24d8bab94e29ba97be8b6",
+                "transaction": "Screen"
+            },
+            "_meta": {
+                "breadcrumbs": {
+                    "values": {
+                        "1": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 42,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "_metrics": {
+                "bytes.ingested.event": 5677,
+                "bytes.stored.event": 11321
+            },
+            "_ref": 4,
+            "_ref_version": 2,
+            "breadcrumbs": {
+                "values": [
+                    {
+                        "category": "console",
+                        "data": {
+                            "arguments": [
+                                "[vite] connected."
+                            ],
+                            "logger": "console"
+                        },
+                        "level": "debug",
+                        "message": "[vite] connected.",
+                        "timestamp": 1788948317.303,
+                        "type": "default"
+                    },
+                    {
+                        "category": "fetch",
+                        "data": {
+                            "__span": "81ee1a8d0a2d469e",
+                            "method": "POST",
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788948317.305,
+                        "type": "http"
+                    }
+                ]
+            },
+            "contexts": {
+                "browser": {
+                    "browser": "Chrome 151.0.0",
+                    "name": "Chrome",
+                    "type": "browser",
+                    "version": "151.0.0"
+                },
+                "culture": {
+                    "calendar": "gregory",
+                    "locale": "zh-CN",
+                    "timezone": "Asia/Riyadh",
+                    "type": "culture"
+                },
+                "os": {
+                    "name": "Windows",
+                    "os": "Windows >=10",
+                    "type": "os",
+                    "version": ">=10"
+                },
+                "trace": {
+                    "client_sample_rate": 0.2,
+                    "sampled": false,
+                    "span_id": "ac0dcc2373e32618",
+                    "status": "unknown",
+                    "trace_id": "f03ed6bec2c24d8bab94e29ba97be8b6",
+                    "type": "trace"
+                }
+            },
+            "culprit": "Screen",
+            "environment": "development",
+            "errors": [
+                {
+                    "symbolicator_type": "missing_source",
+                    "type": "js_no_source",
+                    "url": "http://localhost:5177/dashboard/src/store/marker.js?t=1788858284604"
+                }
+            ],
+            "exception": {
+                "values": [
+                    {
+                        "mechanism": {
+                            "data": null,
+                            "description": null,
+                            "exception_id": null,
+                            "handled": true,
+                            "help_link": null,
+                            "is_exception_group": null,
+                            "meta": null,
+                            "parent_id": null,
+                            "source": null,
+                            "synthetic": null,
+                            "type": "generic"
+                        },
+                        "raw_stacktrace": {
+                            "frames": [
+                                {
+                                    "abs_path": "http://localhost:5177/dashboard/src/store/marker.js?t=1788858284604",
+                                    "addr_mode": null,
+                                    "colno": 22,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "/dashboard/src/store/marker.js",
+                                    "function": "Proxy.fetchMarkers",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 136,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "<anonymous>",
+                                    "addr_mode": null,
+                                    "colno": null,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "<anonymous>",
+                                    "function": "Array.forEach",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": null,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "http://localhost:5177/dashboard/src/store/marker.js?t=1788858284604",
+                                    "addr_mode": null,
+                                    "colno": 56,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "/dashboard/src/store/marker.js",
+                                    "function": null,
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 142,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                }
+                            ]
+                        },
+                        "stacktrace": {
+                            "frames": [
+                                {
+                                    "abs_path": "http://localhost:5177/dashboard/src/store/marker.js?t=1788858284604",
+                                    "addr_mode": null,
+                                    "colno": 22,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true,
+                                        "symbolicated": false
+                                    },
+                                    "errors": null,
+                                    "filename": "/dashboard/src/store/marker.js",
+                                    "function": "Proxy.fetchMarkers",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 136,
+                                    "lock": null,
+                                    "module": "dashboard/src/store/marker",
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "<anonymous>",
+                                    "addr_mode": null,
+                                    "colno": null,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "<anonymous>",
+                                    "function": "Array.forEach",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": null,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "http://localhost:5177/dashboard/src/store/marker.js?t=1788858284604",
+                                    "addr_mode": null,
+                                    "colno": 56,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true,
+                                        "symbolicated": false
+                                    },
+                                    "errors": null,
+                                    "filename": "/dashboard/src/store/marker.js",
+                                    "function": null,
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 142,
+                                    "lock": null,
+                                    "module": "dashboard/src/store/marker",
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                }
+                            ]
+                        },
+                        "type": "TypeError",
+                        "value": "Cannot read properties of undefined (reading 'x')"
+                    }
+                ]
+            },
+            "fingerprint": [
+                "{{ default }}"
+            ],
+            "grouping_config": {
+                "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+                "id": "newstyle:2026-01-20"
+            },
+            "hashes": [
+                "4d26ea85fad726887cf615526a2c3c5a"
+            ],
+            "key_id": "4",
+            "level": "error",
+            "location": "<anonymous>",
+            "logger": "",
+            "metadata": {
+                "filename": "<anonymous>",
+                "function": "Array.forEach",
+                "in_app_frame_mix": "in-app-only",
+                "type": "TypeError",
+                "value": "Cannot read properties of undefined (reading 'x')"
+            },
+            "nodestore_insert": 1788948400.687735,
+            "received": 1788948397.073117,
+            "request": {
+                "api_target": null,
+                "cookies": null,
+                "data": null,
+                "env": null,
+                "fragment": null,
+                "headers": [
+                    [
+                        "Referer",
+                        "http://localhost:5177/login/login?redirect=http://localhost:5177/dashboard/&source=web"
+                    ],
+                    [
+                        "User-Agent",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+                    ]
+                ],
+                "inferred_content_type": null,
+                "method": null,
+                "query_string": [],
+                "url": "http://localhost:5177/dashboard/screen"
+            },
+            "scraping_attempts": [
+                {
+                    "details": "Can't connect to restricted host localhost",
+                    "reason": "invalid_host",
+                    "status": "failure",
+                    "url": "http://localhost:5177/dashboard/src/store/marker.js?t=1788858284604"
+                }
+            ],
+            "sdk": {
+                "integrations": [
+                    "InboundFilters",
+                    "FunctionToString",
+                    "ConversationId",
+                    "BrowserApiErrors",
+                    "Breadcrumbs",
+                    "GlobalHandlers",
+                    "LinkedErrors",
+                    "Dedupe",
+                    "HttpContext",
+                    "CultureContext",
+                    "BrowserSession",
+                    "Vue",
+                    "BrowserTracing",
+                    "WebVitals"
+                ],
+                "name": "sentry.javascript.vue",
+                "packages": [
+                    {
+                        "name": "npm:@sentry/vue",
+                        "version": "10.73.0"
+                    }
+                ],
+                "settings": {
+                    "infer_ip": "never"
+                },
+                "version": "10.73.0"
+            },
+            "symbolicated_in_app": false,
+            "timestamp": 1788948318.224,
+            "title": "TypeError: Cannot read properties of undefined (reading 'x')",
+            "transaction": "Screen",
+            "type": "error",
+            "user": {
+                "id": "150003",
+                "sentry_user": "id:150003"
+            },
+            "version": "7",
+            "url": "https://sentry.sensetime-ksa.top/api/0/projects/sentry/std-smart-office-dashboard/events/ab8d445d76aa44da97434af38d128ce9/",
+            "web_url": "https://sentry.sensetime-ksa.top/organizations/sentry/issues/22/events/ab8d445d76aa44da97434af38d128ce9/",
+            "issue_url": "https://sentry.sensetime-ksa.top/api/0/organizations/sentry/issues/22/",
+            "issue_id": "22"
+        },
+        "triggered_rule": "Smart Office Monitor"
+    },
+    "actor": {
+        "type": "application",
+        "id": "sentry",
+        "name": "Sentry"
+    }
+}

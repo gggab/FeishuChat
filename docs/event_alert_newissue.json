@@ -1,0 +1,395 @@
+{
+    "action": "triggered",
+    "installation": {
+        "uuid": "19bfdda7-80b5-4613-9134-c181a9eb7460"
+    },
+    "data": {
+        "event": {
+            "event_id": "8babf33d8b7c43198f4d4d5094d8bf4a",
+            "project": 4,
+            "release": "std-smart-office-dashboard@1.9.1+local",
+            "dist": null,
+            "platform": "javascript",
+            "message": "",
+            "datetime": "2026-09-09T10:32:53.060000Z",
+            "tags": [
+                [
+                    "browser",
+                    "Chrome 151.0.0"
+                ],
+                [
+                    "browser.name",
+                    "Chrome"
+                ],
+                [
+                    "environment",
+                    "development"
+                ],
+                [
+                    "handled",
+                    "yes"
+                ],
+                [
+                    "interface_type",
+                    "exception"
+                ],
+                [
+                    "level",
+                    "error"
+                ],
+                [
+                    "mechanism",
+                    "generic"
+                ],
+                [
+                    "os",
+                    "Windows >=10"
+                ],
+                [
+                    "os.name",
+                    "Windows"
+                ],
+                [
+                    "release",
+                    "std-smart-office-dashboard@1.9.1+local"
+                ],
+                [
+                    "user",
+                    "id:150003"
+                ],
+                [
+                    "transaction",
+                    "Screen"
+                ],
+                [
+                    "url",
+                    "http://localhost:5177/dashboard/screen"
+                ]
+            ],
+            "_dsc": {
+                "environment": "development",
+                "public_key": "e63ce2485e18ae89be579379ec16c62d",
+                "release": "std-smart-office-dashboard@1.9.1+local",
+                "replay_id": null,
+                "sample_rand": "0.7420240975290883",
+                "sample_rate": "0.2",
+                "sampled": false,
+                "trace_id": "55e66193fb3a491abee9d87fe5e91d01",
+                "transaction": "Screen"
+            },
+            "_meta": {
+                "breadcrumbs": {
+                    "values": {
+                        "1": {
+                            "data": {
+                                "url": {
+                                    "": {
+                                        "len": 42,
+                                        "rem": [
+                                            [
+                                                "@password:filter",
+                                                "s",
+                                                0,
+                                                10
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "12": {
+                            "data": {
+                                "": {
+                                    "len": 2
+                                },
+                                "arguments": {
+                                    "1": {
+                                        "": {
+                                            "len": 3
+                                        },
+                                        "message": {
+                                            "": {
+                                                "len": 1031,
+                                                "rem": [
+                                                    [
+                                                        "!limit",
+                                                        "s",
+                                                        1011,
+                                                        1014
+                                                    ]
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "_metrics": {
+                "bytes.ingested.event": 10943,
+                "bytes.stored.event": 14836
+            },
+            "_ref": 4,
+            "_ref_version": 2,
+            "breadcrumbs": {
+                "values": [
+                    {
+                        "category": "console",
+                        "data": {
+                            "arguments": [
+                                "[vite] connected."
+                            ],
+                            "logger": "console"
+                        },
+                        "level": "debug",
+                        "message": "[vite] connected.",
+                        "timestamp": 1788949972.004,
+                        "type": "default"
+                    },
+                    {
+                        "category": "fetch",
+                        "data": {
+                            "__span": "ac60286a3aff415b",
+                            "method": "POST",
+                            "status_code": 200,
+                            "url": "[Filtered]"
+                        },
+                        "level": "info",
+                        "timestamp": 1788949972.118,
+                        "type": "http"
+                    }
+                ]
+            },
+            "contexts": {
+                "browser": {
+                    "browser": "Chrome 151.0.0",
+                    "name": "Chrome",
+                    "type": "browser",
+                    "version": "151.0.0"
+                },
+                "culture": {
+                    "calendar": "gregory",
+                    "locale": "zh-CN",
+                    "timezone": "Asia/Riyadh",
+                    "type": "culture"
+                },
+                "os": {
+                    "name": "Windows",
+                    "os": "Windows >=10",
+                    "type": "os",
+                    "version": ">=10"
+                },
+                "trace": {
+                    "client_sample_rate": 0.2,
+                    "sampled": false,
+                    "span_id": "94ad1491ba2d76d6",
+                    "status": "unknown",
+                    "trace_id": "55e66193fb3a491abee9d87fe5e91d01",
+                    "type": "trace"
+                }
+            },
+            "culprit": "Screen",
+            "environment": "development",
+            "errors": [
+                {
+                    "symbolicator_type": "missing_source",
+                    "type": "js_no_source",
+                    "url": "http://localhost:5177/dashboard/src/store/location.js?t=1788949957159"
+                }
+            ],
+            "exception": {
+                "values": [
+                    {
+                        "mechanism": {
+                            "data": null,
+                            "description": null,
+                            "exception_id": null,
+                            "handled": true,
+                            "help_link": null,
+                            "is_exception_group": null,
+                            "meta": null,
+                            "parent_id": null,
+                            "source": null,
+                            "synthetic": null,
+                            "type": "generic"
+                        },
+                        "raw_stacktrace": {
+                            "frames": [
+                                {
+                                    "abs_path": "http://localhost:5177/dashboard/src/store/location.js?t=1788949957159",
+                                    "addr_mode": null,
+                                    "colno": 19,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true
+                                    },
+                                    "errors": null,
+                                    "filename": "/dashboard/src/store/location.js",
+                                    "function": "Proxy.fetchLocationList",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 15,
+                                    "lock": null,
+                                    "module": null,
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                }
+                            ]
+                        },
+                        "stacktrace": {
+                            "frames": [
+                                {
+                                    "abs_path": "http://localhost:5177/dashboard/src/store/location.js?t=1788949957159",
+                                    "addr_mode": null,
+                                    "colno": 19,
+                                    "context_line": null,
+                                    "data": {
+                                        "client_in_app": true,
+                                        "symbolicated": false
+                                    },
+                                    "errors": null,
+                                    "filename": "/dashboard/src/store/location.js",
+                                    "function": "Proxy.fetchLocationList",
+                                    "image_addr": null,
+                                    "in_app": true,
+                                    "instruction_addr": null,
+                                    "lineno": 15,
+                                    "lock": null,
+                                    "module": "dashboard/src/store/location",
+                                    "package": null,
+                                    "parent_index": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "sample_count": null,
+                                    "source_link": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                }
+                            ]
+                        },
+                        "type": "Error",
+                        "value": "test:{\"code\":0,\"message\":\"Succeed\",\"desc\":\"成功\",\"data\":[{\"locationId\":\"-101\",\"cityCode\":\"Chengdu\",\"name\":\"Chengdu\",\"locationFullName\":\"Chengdu\",\"children\":[{\"locationId\":\"-102\",\"cityCode\":\"ShangTang\",\"name\":\"ShangTang\",\"locationFullName\":\"Chengdu, ShangTang\",\"children\":[{\"locationId\":\"691810\",\"cityCode\":\"9F\",\"name\":\"9F\",\"locationFullName\":\"ShangTang, 9F\"}]}]},{\"locationId\":\"-103\",\"name\":\"GXH3+CC6 Shenzhenwan Science and Technology Ecological Garden\",\"locationFullName\":\"GXH3+CC6 Shenzhenwan Science and Technology Ecological Garden\",\"children\":[{\"locationId\":\"-104\",\"locationFullName\":\"GXH3+CC6 Shenzhenwan Science and Technology Ecological Garden, null\",\"children\":[{\"locationId\":\"721810\",\"locationFullName\":\"null, null\"}]}]},{\"locationId\":\"-105\",\"cityCode\":\"Riyadh\",\"name\":\"Riyadh\",\"locationFullName\":\"Riyadh\",\"children\":[{\"locationId\":\"-106\",\"cityCode\":\"KAFD 5.05\",\"name\":\"KAFD 5.05\",\"locationFullName\":\"Riyadh, KAFD 5.05\",\"children\":[{\"locationId\":\"1\",\"cityCode\":\"F12\",\"name\":\"12F\",\"locationFullName\":\"KAFD 5.05, 12F\"}]}]}]}"
+                    }
+                ]
+            },
+            "fingerprint": [
+                "{{ default }}"
+            ],
+            "grouping_config": {
+                "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+                "id": "newstyle:2026-01-20"
+            },
+            "hashes": [
+                "48056724060f6e3da8825eed0a3293c7"
+            ],
+            "key_id": "4",
+            "level": "error",
+            "location": "/dashboard/src/store/location.js",
+            "logger": "",
+            "metadata": {
+                "filename": "/dashboard/src/store/location.js",
+                "function": "Proxy.fetchLocationList",
+                "in_app_frame_mix": "in-app-only",
+                "type": "Error",
+                "value": "test:{\"code\":0,\"message\":\"Succeed\",\"desc\":\"成功\",\"data\":[{\"locationId\":\"-101\",\"cityCode\":\"Chengdu\",\"name\":\"Chengdu\",\"locationFullName\":\"Chengdu\",\"children\":[{\"locationId\":\"-102\",\"cityCode\":\"ShangTang\",\"name\":\"ShangTang\",\"locationFullName\":\"Chengdu, ShangTang\",\"children\":[{\"locationId\":\"691810\",\"cityCode\":\"9F\",\"name\":\"9F\",\"locationFullName\":\"ShangTang, 9F\"}]}]},{\"locationId\":\"-103\",\"name\":\"GXH3+CC6 Shenzhenwan Science and Technology Ecological Garden\",\"locationFullName\":\"GXH3+CC6 Shenzhenwan Science and Technology Ecological Garden\",\"children\":[{\"locationId\":\"-104\",\"locationFullName\":\"GXH3+CC6 Shenzhenwan Science and Technology Ecological Garden, null\",\"children\":[{\"locationId\":\"721810\",\"locationFullName\":\"null, null\"}]}]},{\"locationId\":\"-105\",\"cityCode\":\"Riyadh\",\"name\":\"Riyadh\",\"locationFullName\":\"Riyadh\",\"children\":[{\"locationId\":\"-106\",\"cityCode\":\"KAFD 5.05\",\"name\":\"KAFD 5.05\",\"locationFullName\":\"Riyadh, KAFD 5.05\",\"children\":[{\"locationId\":\"1\",\"cityCode\":\"F12\",\"name\":\"12F\",\"locationFullName\":\"KAFD 5.05, 1..."
+            },
+            "nodestore_insert": 1788950055.120686,
+            "received": 1788950051.966956,
+            "request": {
+                "api_target": null,
+                "cookies": null,
+                "data": null,
+                "env": null,
+                "fragment": null,
+                "headers": [
+                    [
+                        "Referer",
+                        "http://localhost:5177/login/login?redirect=http://localhost:5177/dashboard/&source=web"
+                    ],
+                    [
+                        "User-Agent",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+                    ]
+                ],
+                "inferred_content_type": null,
+                "method": null,
+                "query_string": [],
+                "url": "http://localhost:5177/dashboard/screen"
+            },
+            "scraping_attempts": [
+                {
+                    "details": "Can't connect to restricted host localhost",
+                    "reason": "invalid_host",
+                    "status": "failure",
+                    "url": "http://localhost:5177/dashboard/src/store/location.js?t=1788949957159"
+                }
+            ],
+            "sdk": {
+                "integrations": [
+                    "InboundFilters",
+                    "FunctionToString",
+                    "ConversationId",
+                    "BrowserApiErrors",
+                    "Breadcrumbs",
+                    "GlobalHandlers",
+                    "LinkedErrors",
+                    "Dedupe",
+                    "HttpContext",
+                    "CultureContext",
+                    "BrowserSession",
+                    "Vue",
+                    "BrowserTracing",
+                    "WebVitals"
+                ],
+                "name": "sentry.javascript.vue",
+                "packages": [
+                    {
+                        "name": "npm:@sentry/vue",
+                        "version": "10.73.0"
+                    }
+                ],
+                "settings": {
+                    "infer_ip": "never"
+                },
+                "version": "10.73.0"
+            },
+            "symbolicated_in_app": false,
+            "timestamp": 1788949973.06,
+            "title": "Error: test:{\"code\":0,\"message\":\"Succeed\",\"desc\":\"成功\",\"data\":[{\"locationId\":\"-101\",\"cityCode\":\"Chengdu\",\"name\":\"Chengdu\",\"locationFullName\":\"Chengdu\",\"children\":[{\"locationId\":\"-102\",\"cityCode\":\"ShangTang\",\"name\":\"ShangTang\",\"locationFullName\":\"Chengdu, ShangT...",
+            "transaction": "Screen",
+            "type": "error",
+            "user": {
+                "id": "150003",
+                "sentry_user": "id:150003"
+            },
+            "version": "7",
+            "url": "https://sentry.sensetime-ksa.top/api/0/projects/sentry/std-smart-office-dashboard/events/8babf33d8b7c43198f4d4d5094d8bf4a/",
+            "web_url": "https://sentry.sensetime-ksa.top/organizations/sentry/issues/74/events/8babf33d8b7c43198f4d4d5094d8bf4a/",
+            "issue_url": "https://sentry.sensetime-ksa.top/api/0/organizations/sentry/issues/74/",
+            "issue_id": "74"
+        },
+        "triggered_rule": "Smart Office Monitor"
+    },
+    "actor": {
+        "type": "application",
+        "id": "sentry",
+        "name": "Sentry"
+    }
+}

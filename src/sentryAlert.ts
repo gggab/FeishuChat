@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { AlertField, AlertMessage, TitleKey } from './feishuCard.js';
+import { AlertField, AlertMessage, ContentBlock, fullField, shortFields, TitleKey } from './feishuCard.js';
 
 /**
  * Sentry Internal Integration webhook receiver.
@@ -12,7 +12,8 @@ import { AlertField, AlertMessage, TitleKey } from './feishuCard.js';
  * Card rendering (native Feishu i18n) lives in ./feishuCard.js — this file
  * only verifies the webhook signature and parses the payload into the
  * generic AlertMessage structure that feishuCard.js knows how to render.
- * Field/layout decisions follow docs/sentry-card/README.md.
+ * The event_alert/error "错误告警" field/layout contract follows
+ * docs/sentry-card/event-alert-card-content.md.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -57,6 +58,81 @@ function levelColor(level: string): 'red' | 'orange' | 'blue' {
   return level === 'fatal' || level === 'error' ? 'red' : level === 'warning' ? 'orange' : 'blue';
 }
 
+/**
+ * Feishu cards have no per-viewer timezone concept, so the event time is displayed in this
+ * deployment's fixed local offset (Asia/Riyadh, UTC+3) rather than the raw UTC instant —
+ * see docs/sentry-card/event-alert-card-content.md row 6.
+ */
+const DISPLAY_UTC_OFFSET_HOURS = 3;
+function formatEventTime(iso?: string): string | undefined {
+  if (!iso) return undefined;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return undefined;
+  const shifted = new Date(date.getTime() + DISPLAY_UTC_OFFSET_HOURS * 3600_000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const y = shifted.getUTCFullYear();
+  const m = pad(shifted.getUTCMonth() + 1);
+  const d = pad(shifted.getUTCDate());
+  const hh = pad(shifted.getUTCHours());
+  const mm = pad(shifted.getUTCMinutes());
+  const ss = pad(shifted.getUTCSeconds());
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss} (UTC+${pad(DISPLAY_UTC_OFFSET_HOURS)}:00)`;
+}
+
+/** `{module} · {function}（{crash_location}）`, dropping whichever part is missing. */
+function formatCrashModule(moduleCrash: any): string | undefined {
+  if (!moduleCrash) return undefined;
+  const head = [moduleCrash.module, moduleCrash.function].filter(Boolean).join(' · ');
+  const location = moduleCrash.crash_location ? `（${moduleCrash.crash_location}）` : '';
+  const combined = `${head}${location}`;
+  return combined || undefined;
+}
+
+/** `{model} · {os}`, e.g. "Pixel 4 · Android 13". */
+function formatDevice(device: any, os: any): string | undefined {
+  const parts = [device?.model, os?.os].filter(Boolean);
+  return parts.length ? parts.join(' · ') : undefined;
+}
+
+/** `{app_version} ({app_build})`, e.g. "2.9.2 (260901001)"; requires app_version, app_build is optional. */
+function formatAppVersion(app: any): string | undefined {
+  if (!app?.app_version) return undefined;
+  return app.app_build ? `${app.app_version} (${app.app_build})` : String(app.app_version);
+}
+
+/**
+ * Shared body-content blocks for the unified "错误告警" card (event_alert + error resources —
+ * see docs/sentry-card/event-alert-card-content.md, which doesn't distinguish a new issue from
+ * a recurring one). `ev` is either `data.event` or `data.error`, whose shapes are near-identical.
+ *
+ * Flutter-only rows (crash module / device / app version) are added as a set, gated on whether
+ * any of contexts.module_crash/device/app is present — not on the `platform` field.
+ */
+function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] {
+  const level = String(ev.level ?? 'error').toLowerCase();
+  const culprit = ev.culprit ?? ev.message;
+  const contexts = ev.contexts ?? {};
+  const isFlutterish = Boolean(contexts.module_crash || contexts.device || contexts.app);
+  const crashModule = isFlutterish ? formatCrashModule(contexts.module_crash) : undefined;
+  const device = isFlutterish ? formatDevice(contexts.device, contexts.os) : undefined;
+  const appVersion = isFlutterish ? formatAppVersion(contexts.app) : undefined;
+
+  return [
+    ...shortFields(
+      { labelKey: 'level', value: level },
+      formatEventTime(ev.datetime) ? { labelKey: 'eventTime', value: formatEventTime(ev.datetime)! } : undefined,
+      triggeredRule ? { labelKey: 'triggeredRule', value: String(triggeredRule) } : undefined,
+      culprit ? { labelKey: 'locationHint', value: culprit } : undefined,
+    ),
+    ...fullField(ev.release ? { labelKey: 'release', value: String(ev.release) } : undefined),
+    ...fullField(crashModule ? { labelKey: 'crashModule', value: crashModule } : undefined),
+    ...shortFields(
+      device ? { labelKey: 'device', value: device } : undefined,
+      appVersion ? { labelKey: 'appVersion', value: appVersion } : undefined,
+    ),
+  ];
+}
+
 /** Unknown resource, or a known resource with an action we don't have a dedicated layout for: keep the raw values, invent nothing. */
 function buildFallback(resource: string, body: any): AlertMessage {
   console.log(`[sentry] unrecognized resource/action=${resource}/${body?.action}, raw payload: ${JSON.stringify(body)}`);
@@ -65,7 +141,7 @@ function buildFallback(resource: string, body: any): AlertMessage {
   return {
     titleKey: 'notification',
     color: 'grey',
-    fields,
+    blocks: shortFields(...fields),
     url: body?.data?.web_url,
   };
 }
@@ -112,16 +188,12 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
     const ev = body?.data?.event ?? {};
     const level = String(ev.level ?? 'error').toLowerCase();
     const environment = ev.environment ?? tagValue(ev.tags, 'environment');
-    const triggeredRule = body?.data?.triggered_rule;
-    const culprit = ev.culprit ?? ev.message;
     return {
-      titleKey: 'ruleAlert',
+      titleKey: 'errorAlert',
       environment,
       color: levelColor(level),
       summary: ev.title ?? ev.message,
-      standaloneFieldsBefore: triggeredRule ? [{ labelKey: 'triggeredRule', value: String(triggeredRule) }] : [],
-      fields: [{ labelKey: 'level', value: level }],
-      trailingField: culprit ? { labelKey: 'locationHint', value: culprit } : undefined,
+      blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule),
       // web_url is the user-facing page; data.event.url is the API URL and must never be used as a link
       url: ev.web_url,
       // event_alert payload only has a numeric project ID, no name; fall back to the API URL for a slug
@@ -142,8 +214,10 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       environment: ma.alert_rule?.environment,
       color: METRIC_COLOR[action],
       summary: ma.title,
-      fields: [{ labelKey: 'status', value: action }],
-      trailingField: description ? { labelKey: 'alertDescription', value: description } : undefined,
+      blocks: [
+        ...shortFields({ labelKey: 'status', value: action }),
+        ...fullField(description ? { labelKey: 'alertDescription', value: description } : undefined),
+      ],
       url: body?.data?.web_url,
       // metric_alert payload has no numeric project ID (only a slug array), so it can't be routed by ID
       projectSlug: ma.alert_rule?.projects?.[0],
@@ -162,12 +236,14 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       // resolved/assigned/archived carry a fixed color regardless of severity; created/unresolved follow the issue's level
       color: ISSUE_FIXED_COLOR[action] ?? levelColor(level),
       summary: issue.title,
-      fields: [
-        { labelKey: 'action', value: action },
-        // a resolved issue's level describes what it *was*, not its current state — label it accordingly
-        { labelKey: action === 'resolved' ? 'originalLevel' : 'level', value: level },
+      blocks: [
+        ...shortFields(
+          { labelKey: 'action', value: action },
+          // a resolved issue's level describes what it *was*, not its current state — label it accordingly
+          { labelKey: action === 'resolved' ? 'originalLevel' : 'level', value: level },
+        ),
+        ...fullField(issue.culprit ? { labelKey: 'locationHint', value: issue.culprit } : undefined),
       ],
-      trailingField: issue.culprit ? { labelKey: 'locationHint', value: issue.culprit } : undefined,
       url: issue.web_url,
       projectId: issue.project?.id != null ? String(issue.project.id) : undefined,
       projectSlug: issue.project?.slug,
@@ -189,7 +265,7 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       return {
         titleKey: 'notification',
         color: 'grey',
-        fields: [{ labelKey: 'resourceType', value: `activity_alert:${activityType || 'unknown'}` }],
+        blocks: shortFields({ labelKey: 'resourceType', value: `activity_alert:${activityType || 'unknown'}` }),
         url: issue.web_url,
         projectId,
         projectSlug,
@@ -203,11 +279,13 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       environment,
       color: ISSUE_FIXED_COLOR[action] ?? levelColor(level),
       summary: issue.title,
-      fields: [
-        { labelKey: 'action', value: action },
-        { labelKey: action === 'resolved' ? 'originalLevel' : 'level', value: level },
+      blocks: [
+        ...shortFields(
+          { labelKey: 'action', value: action },
+          { labelKey: action === 'resolved' ? 'originalLevel' : 'level', value: level },
+        ),
+        ...fullField(issue.culprit ? { labelKey: 'locationHint', value: issue.culprit } : undefined),
       ],
-      trailingField: issue.culprit ? { labelKey: 'locationHint', value: issue.culprit } : undefined,
       url: issue.web_url,
       projectId,
       projectSlug,
@@ -217,19 +295,17 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
   if (resource === 'error') {
     const err = body?.data?.error ?? {};
     const level = String(err.level ?? 'error').toLowerCase();
-    // error payload only has a numeric project ID, no name; fall back to the detail URL's /projects/<org>/<slug>/ for display
-    const projectSlug = projectSlugFromUrl(err.url);
     const environment = err.environment ?? tagValue(err.tags, 'environment');
     return {
-      titleKey: 'error',
+      titleKey: 'errorAlert',
       environment,
       color: levelColor(level),
       summary: err.title,
-      fields: [{ labelKey: 'level', value: level }],
-      trailingField: err.culprit ? { labelKey: 'locationHint', value: err.culprit } : undefined,
+      blocks: buildErrorAlertBlocks(err),
       url: err.web_url,
       projectId: err.project != null ? String(err.project) : undefined,
-      projectSlug,
+      // error payload only has a numeric project ID, no name; fall back to the detail URL's /projects/<org>/<slug>/ for display
+      projectSlug: projectSlugFromUrl(err.url),
     };
   }
   // Resource types without dedicated parsing: log the raw payload so parsing can be extended later

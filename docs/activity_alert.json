@@ -1,0 +1,87 @@
+{
+    "action": "triggered",
+    "installation": {
+        "uuid": "19bfdda7-80b5-4613-9134-c181a9eb7460"
+    },
+    "data": {
+        "issue": {
+            "url": "https://sentry.sensetime-ksa.top/api/0/organizations/sentry/issues/22/",
+            "web_url": "https://sentry.sensetime-ksa.top/organizations/sentry/issues/22/",
+            "project_url": "https://sentry.sensetime-ksa.top/organizations/sentry/issues/?project=4",
+            "id": "22",
+            "shareId": null,
+            "shortId": "STD-SMART-OFFICE-DASHBOARD-7",
+            "title": "TypeError: Cannot read properties of undefined (reading 'x')",
+            "culprit": "Screen",
+            "permalink": "https://sentry.sensetime-ksa.top/organizations/sentry/issues/22/",
+            "logger": null,
+            "level": "error",
+            "status": "resolved",
+            "statusDetails": {},
+            "substatus": null,
+            "isPublic": false,
+            "platform": "javascript",
+            "project": {
+                "id": "4",
+                "name": "std-smart-office-dashboard",
+                "slug": "std-smart-office-dashboard",
+                "platform": "javascript-vue"
+            },
+            "type": "error",
+            "metadata": {
+                "value": "Cannot read properties of undefined (reading 'x')",
+                "type": "TypeError",
+                "filename": "<anonymous>",
+                "function": "Array.forEach",
+                "in_app_frame_mix": "in-app-only",
+                "sdk": {
+                    "name": "sentry.javascript.vue",
+                    "name_normalized": "sentry.javascript.vue"
+                },
+                "initial_priority": 75,
+                "title": null
+            },
+            "numComments": 0,
+            "assignedTo": null,
+            "isBookmarked": false,
+            "isSubscribed": false,
+            "subscriptionDetails": null,
+            "hasSeen": false,
+            "annotations": [],
+            "issueType": "error",
+            "issueCategory": "error",
+            "priority": "high",
+            "priorityLockedAt": null,
+            "seerFixabilityScore": null,
+            "seerAutofixLastTriggered": null,
+            "seerExplorerAutofixLastTriggered": null,
+            "isUnhandled": false,
+            "count": "104",
+            "userCount": 1,
+            "firstSeen": "2026-09-06T12:52:30.299000Z",
+            "lastSeen": "2026-09-09T10:01:27.786000Z"
+        },
+        "activity": {
+            "type": "status_resolved",
+            "details": {
+                "user": {
+                    "id": 1,
+                    "name": "liaowentao@sensetime.com",
+                    "username": "liaowentao@sensetime.com"
+                }
+            }
+        },
+        "alert": {
+            "id": 8,
+            "title": "Smart Office Monitor",
+            "sentry_app_id": 1,
+            "url": "https://sentry.sensetime-ksa.top/api/0/organizations/sentry/workflows/8/",
+            "web_url": "https://sentry.sensetime-ksa.top/organizations/sentry/monitors/alerts/8/"
+        }
+    },
+    "actor": {
+        "type": "application",
+        "id": "sentry",
+        "name": "Sentry"
+    }
+}

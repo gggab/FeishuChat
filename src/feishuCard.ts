@@ -1,8 +1,12 @@
 /**
- * Builds Feishu interactive message cards with native i18n: content for
- * every configured locale is sent in one card, and the Feishu client picks
- * the matching language per viewer (falls back to en_us for anything else,
- * e.g. ja_jp, ko_kr). Layout follows docs/sentry-card/README.md.
+ * Builds Feishu interactive message cards (Card JSON 1.0) with native i18n: content for
+ * every configured locale is sent in one card, and the Feishu client picks the matching
+ * language per viewer (falls back to en_us for anything else, e.g. ja_jp, ko_kr).
+ *
+ * The "错误告警" (event_alert/error) card layout follows the Figma spec —
+ * https://www.figma.com/design/3pg9cagKXQp0iUsTZEpTLP/Feishu-Card?node-id=24-2 — and
+ * docs/sentry-card/event-alert-card-content.md. Other alert kinds (issue/activity_alert/
+ * metric_alert/fallback) reuse the same building blocks but weren't part of that redesign.
  */
 
 type Locale = 'zh_cn' | 'en_us';
@@ -11,25 +15,35 @@ const LOCALES: Locale[] = ['zh_cn', 'en_us'];
 export type FieldLabelKey =
   | 'level'
   | 'originalLevel'
+  | 'eventTime'
   | 'triggeredRule'
+  | 'locationHint'
+  | 'release'
+  | 'crashModule'
+  | 'device'
+  | 'appVersion'
   | 'action'
   | 'status'
-  | 'locationHint'
   | 'alertDescription'
   | 'resourceType';
 
 const FIELD_LABELS: Record<FieldLabelKey, Record<Locale, string>> = {
   level: { zh_cn: '级别', en_us: 'Level' },
   originalLevel: { zh_cn: '原问题级别', en_us: 'Original issue level' },
+  eventTime: { zh_cn: '时间', en_us: 'Event time' },
   triggeredRule: { zh_cn: '触发规则', en_us: 'Triggered rule' },
+  locationHint: { zh_cn: '定位线索', en_us: 'Location hint' },
+  release: { zh_cn: '版本', en_us: 'Release' },
+  crashModule: { zh_cn: '崩溃模块', en_us: 'Crash module' },
+  device: { zh_cn: '设备', en_us: 'Device' },
+  appVersion: { zh_cn: 'App 版本', en_us: 'App version' },
   action: { zh_cn: '动作', en_us: 'Action' },
   status: { zh_cn: '状态', en_us: 'Status' },
-  locationHint: { zh_cn: '定位线索', en_us: 'Location hint' },
   alertDescription: { zh_cn: '告警说明', en_us: 'Alert description' },
   resourceType: { zh_cn: '资源类型', en_us: 'Resource type' },
 };
 
-/** `action`/`status` field values are translated when recognized; everything else (level, culprit...) stays raw/upstream. */
+/** `action`/`status` field values are translated when recognized; everything else (level, culprit, release...) stays raw/upstream. */
 const ACTION_VALUE_LABELS: Record<string, Record<Locale, string>> = {
   created: { zh_cn: '已创建', en_us: 'Created' },
   resolved: { zh_cn: '已解决', en_us: 'Resolved' },
@@ -49,8 +63,7 @@ function fieldValueDisplay(field: AlertField, locale: Locale): string {
 }
 
 export type TitleKey =
-  | 'error'
-  | 'ruleAlert'
+  | 'errorAlert'
   | 'issueCreated'
   | 'issueResolved'
   | 'issueUnresolved'
@@ -63,8 +76,8 @@ export type TitleKey =
 
 /** Fixed, translated "type/status" text — the header title is `{raw environment} · {this}`, or just this when there's no environment. */
 const TITLE_TEXTS: Record<TitleKey, Record<Locale, string>> = {
-  error: { zh_cn: '错误事件', en_us: 'Error event' },
-  ruleAlert: { zh_cn: '规则告警', en_us: 'Rule alert' },
+  // event_alert and error resources are unified into one "错误告警" concept — see docs/sentry-card/event-alert-card-content.md
+  errorAlert: { zh_cn: '错误告警', en_us: 'Error alert' },
   issueCreated: { zh_cn: '新问题', en_us: 'New issue' },
   issueResolved: { zh_cn: '问题已解决', en_us: 'Issue resolved' },
   issueUnresolved: { zh_cn: '问题未解决', en_us: 'Issue unresolved' },
@@ -77,10 +90,10 @@ const TITLE_TEXTS: Record<TitleKey, Record<Locale, string>> = {
 };
 const UNTITLED: Record<Locale, string> = { zh_cn: '(无标题)', en_us: '(untitled)' };
 
-type ButtonCategory = 'error' | 'ruleAlert' | 'issue' | 'metric' | 'notification';
+/** Button label follows the alert category — event_alert/error and unknown/fallback both use the same generic "view details" text. */
+type ButtonCategory = 'errorAlert' | 'issue' | 'metric' | 'generic';
 const BUTTON_CATEGORY: Record<TitleKey, ButtonCategory> = {
-  error: 'error',
-  ruleAlert: 'ruleAlert',
+  errorAlert: 'errorAlert',
   issueCreated: 'issue',
   issueResolved: 'issue',
   issueUnresolved: 'issue',
@@ -89,14 +102,13 @@ const BUTTON_CATEGORY: Record<TitleKey, ButtonCategory> = {
   metricCritical: 'metric',
   metricWarning: 'metric',
   metricResolved: 'metric',
-  notification: 'notification',
+  notification: 'generic',
 };
 const BUTTON_LABELS: Record<ButtonCategory, Record<Locale, string>> = {
-  error: { zh_cn: '查看错误事件', en_us: 'View error event' },
-  ruleAlert: { zh_cn: '查看告警事件', en_us: 'View alert event' },
+  errorAlert: { zh_cn: '查看详情', en_us: 'View details' },
   issue: { zh_cn: '查看问题', en_us: 'View issue' },
   metric: { zh_cn: '查看指标告警', en_us: 'View metric alert' },
-  notification: { zh_cn: '查看详情', en_us: 'View details' },
+  generic: { zh_cn: '查看详情', en_us: 'View details' },
 };
 
 /**
@@ -111,8 +123,29 @@ function truncate(text: string, max: number): string {
 
 export interface AlertField {
   labelKey: FieldLabelKey;
-  /** Raw upstream value (level name, culprit...) or a translatable code (action/status) — see fieldValueDisplay */
+  /** Raw upstream value (level name, culprit, release...) or a translatable code (action/status) — see fieldValueDisplay */
   value: string;
+}
+
+/**
+ * One row of body content, following the Figma spec's "并列字段 / 独占整行字段" pattern:
+ * - 'full': the field always takes the full card width (e.g. release, crash module).
+ * - 'short': fields flow left-to-right and Feishu wraps them 2-per-row. Missing fields are
+ *   simply not passed in, so remaining fields reflow next to whatever comes after them —
+ *   this is what makes the Figma "missing fields" narrow-card case show two otherwise
+ *   unrelated fields side by side instead of leaving blank columns.
+ */
+export type ContentBlock = { kind: 'full'; field: AlertField } | { kind: 'short'; fields: AlertField[] };
+
+/** Build a 'short' block from possibly-missing fields, in order; omitted entirely if none are present. */
+export function shortFields(...fields: (AlertField | undefined)[]): ContentBlock[] {
+  const present = fields.filter((f): f is AlertField => f != null);
+  return present.length ? [{ kind: 'short', fields: present }] : [];
+}
+
+/** Build a 'full' block from a possibly-missing field; omitted entirely if not present. */
+export function fullField(field: AlertField | undefined): ContentBlock[] {
+  return field ? [{ kind: 'full', field }] : [];
 }
 
 export interface AlertMessage {
@@ -122,12 +155,8 @@ export interface AlertMessage {
   color: 'red' | 'orange' | 'green' | 'blue' | 'grey';
   /** Error/issue/metric title text, shown once as a standalone body line (raw, truncated). Not rendered at all for 'notification'. */
   summary?: string;
-  /** Rendered as their own standalone lines, before the fields grid (e.g. triggered rule name) */
-  standaloneFieldsBefore?: AlertField[];
-  /** Rendered together as a compact grid (e.g. level, action, status) */
-  fields: AlertField[];
-  /** Rendered as a standalone line after a divider (culprit / alert description) */
-  trailingField?: AlertField;
+  /** Rendered in order, after project/summary and before the divider+button — see ContentBlock. */
+  blocks: ContentBlock[];
   /** Link to the Sentry detail page — must be a user-facing web_url, never an API url or request.url */
   url?: string;
   /** Sentry numeric project ID (string form), used to route to a per-project Feishu group */
@@ -149,11 +178,12 @@ function renderTitle(msg: AlertMessage, locale: Locale): string {
   return msg.environment ? `${msg.environment} · ${typeText}` : typeText;
 }
 
+function textLine(content: string): Record<string, unknown> {
+  return { tag: 'div', text: { tag: 'plain_text', content } };
+}
+
 function fieldLine(field: AlertField, locale: Locale): Record<string, unknown> {
-  return {
-    tag: 'div',
-    text: { tag: 'plain_text', content: `${FIELD_LABELS[field.labelKey][locale]}\n${fieldValueDisplay(field, locale)}` },
-  };
+  return textLine(`${FIELD_LABELS[field.labelKey][locale]}\n${fieldValueDisplay(field, locale)}`);
 }
 
 /** Build a Feishu interactive card with native i18n (viewer's Feishu client language picks the matching content) */
@@ -165,37 +195,36 @@ export function buildFeishuCard(msg: AlertMessage): Record<string, unknown> {
     i18nTitle[locale] = renderTitle(msg, locale);
     const elements: unknown[] = [];
     if (project) {
-      elements.push({ tag: 'div', text: { tag: 'plain_text', content: project } });
+      elements.push(textLine(project));
     }
     // 'notification' (unknown resource/action) has no title concept at all — every other type always shows one,
     // falling back to a translated placeholder rather than silently dropping the line.
     if (msg.titleKey !== 'notification') {
-      elements.push({ tag: 'div', text: { tag: 'plain_text', content: truncate(msg.summary || UNTITLED[locale], TITLE_TEXT_MAX_LEN) } });
+      elements.push(textLine(truncate(msg.summary || UNTITLED[locale], TITLE_TEXT_MAX_LEN)));
     }
-    for (const field of msg.standaloneFieldsBefore ?? []) {
-      elements.push(fieldLine(field, locale));
-    }
-    if (msg.fields.length) {
-      elements.push({
-        tag: 'div',
-        fields: msg.fields.map((f) => ({
-          is_short: true,
-          text: { tag: 'plain_text', content: `${FIELD_LABELS[f.labelKey][locale]}\n${fieldValueDisplay(f, locale)}` },
-        })),
-      });
-    }
-    if (msg.trailingField) {
-      elements.push({ tag: 'hr' });
-      elements.push(fieldLine(msg.trailingField, locale));
+    for (const block of msg.blocks) {
+      if (block.kind === 'full') {
+        elements.push(fieldLine(block.field, locale));
+      } else if (block.fields.length) {
+        elements.push({
+          tag: 'div',
+          fields: block.fields.map((f) => ({
+            is_short: true,
+            text: { tag: 'plain_text', content: `${FIELD_LABELS[f.labelKey][locale]}\n${fieldValueDisplay(f, locale)}` },
+          })),
+        });
+      }
     }
     if (msg.url) {
+      elements.push({ tag: 'hr' });
       elements.push({
         tag: 'action',
         actions: [
           {
             tag: 'button',
             text: { tag: 'plain_text', content: BUTTON_LABELS[BUTTON_CATEGORY[msg.titleKey]][locale] },
-            type: 'primary',
+            // 'default' renders as Feishu's outlined (not filled) button, matching the Figma spec
+            type: 'default',
             url: msg.url,
           },
         ],
