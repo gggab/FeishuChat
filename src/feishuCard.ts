@@ -209,29 +209,6 @@ function textLine(content: string): Record<string, unknown> {
   return { tag: 'div', text: { tag: 'plain_text', content } };
 }
 
-/**
- * Card JSON 1.0 elements have no margin/padding control (that's a Card JSON 2.0-only property),
- * and Feishu packs consecutive `div` blocks tightly by default — the Figma spec's uniform 16px
- * vertical rhythm between every body row is approximated here with a blank spacer row (a
- * non-empty-but-invisible zero-width space, so it survives any "non-empty content" validation
- * while rendering as a blank line of roughly one line-height).
- */
-const SPACER = { tag: 'div', text: { tag: 'plain_text', content: '​' } };
-
-/**
- * Markdown-sensitive characters that could otherwise be (mis)interpreted by lark_md if they
- * happen to appear in upstream text (error messages, stack traces...) — escaped so raw content
- * always renders as literal text instead of accidentally toggling emphasis/links/etc.
- */
-function escapeLarkMd(text: string): string {
-  return text.replace(/[\\`*_~<>[\]]/g, (ch) => `\\${ch}`);
-}
-
-/** The one line the Figma spec renders larger/bolder than the rest of the body (the error/issue summary). */
-function boldTextLine(content: string): Record<string, unknown> {
-  return { tag: 'div', text: { tag: 'lark_md', content: `**${escapeLarkMd(content)}**` } };
-}
-
 function fieldLine(field: AlertField, locale: Locale): Record<string, unknown> {
   return textLine(`${FIELD_LABELS[field.labelKey][locale]}\n${fieldValueDisplay(field, locale)}`);
 }
@@ -244,27 +221,21 @@ export function buildFeishuCard(msg: AlertMessage): Record<string, unknown> {
   for (const locale of LOCALES) {
     i18nTitle[locale] = renderTitle(msg, locale);
     const elements: unknown[] = [];
-    // pushRow inserts a spacer ahead of every row but the first — see SPACER above; the divider/button
-    // pair below is appended directly (bypassing pushRow) since `hr` already carries its own spacing.
-    const pushRow = (el: Record<string, unknown>) => {
-      if (elements.length) elements.push(SPACER);
-      elements.push(el);
-    };
     if (project) {
-      pushRow(textLine(project));
+      elements.push(textLine(project));
     }
     // 'notification' (unknown resource/action) has no title concept at all — every other type always shows one,
     // falling back to a translated placeholder rather than silently dropping the line.
     if (msg.titleKey !== 'notification') {
-      pushRow(boldTextLine(truncate(msg.summary || UNTITLED[locale], TITLE_TEXT_MAX_LEN)));
+      elements.push(textLine(truncate(msg.summary || UNTITLED[locale], TITLE_TEXT_MAX_LEN)));
     }
     for (const block of msg.blocks) {
       if (block.kind === 'full') {
-        pushRow(fieldLine(block.field, locale));
+        elements.push(fieldLine(block.field, locale));
       } else if (block.kind === 'note') {
-        pushRow(textLine(NOTE_TEXTS[block.noteKey][locale]));
+        elements.push(textLine(NOTE_TEXTS[block.noteKey][locale]));
       } else if (block.fields.length) {
-        pushRow({
+        elements.push({
           tag: 'div',
           fields: block.fields.map((f) => ({
             is_short: true,

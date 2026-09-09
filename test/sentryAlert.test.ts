@@ -57,6 +57,12 @@ describe('parseSentryAlert', () => {
     expect(msg.blocks.find((b) => b.kind === 'full' && b.field.labelKey === 'release')).toBeDefined();
     // must use web_url (user-facing), never the API url even though both are present
     expect(msg.url).toBe('https://sentry.example.com/issues/123/');
+    // level/time and triggeredRule/locationHint are two separate row-blocks (each its own `fields` div),
+    // not one flowing group of 4 — packing all 4 together rendered the two rows flush with no gap
+    const shortBlocks = msg.blocks.filter((b) => b.kind === 'short');
+    expect(shortBlocks).toHaveLength(2);
+    expect(shortBlocks[0].fields.map((f) => f.labelKey)).toEqual(['level', 'eventTime']);
+    expect(shortBlocks[1].fields.map((f) => f.labelKey)).toEqual(['triggeredRule', 'locationHint']);
   });
 
   it('event_alert: missing triggered_rule/release/time is omitted entirely, not shown as a placeholder', () => {

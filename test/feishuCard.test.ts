@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { buildFeishuCard } from '../src/feishuCard.js';
 
-const SPACER = { tag: 'div', text: { tag: 'plain_text', content: '​' } };
-
-/** Drop the spacer rows inserted between every body row, for assertions that only care about content order. */
-function stripSpacers(elements: any[]): any[] {
-  return elements.filter((e) => JSON.stringify(e) !== JSON.stringify(SPACER));
-}
-
 describe('buildFeishuCard', () => {
-  it('renders environment · type-text in the header, and project/summary/blocks/button in the body, spaced with a blank row between each', () => {
+  it('renders environment · type-text in the header, and project/summary/blocks/button in the body', () => {
     const card = buildFeishuCard({
       titleKey: 'errorAlert',
       environment: 'development',
@@ -30,28 +23,22 @@ describe('buildFeishuCard', () => {
 
     const zh = (card.i18n_elements as any).zh_cn;
     const en = (card.i18n_elements as any).en_us;
-    // body order: project (no label) -> summary (bold) -> short block -> full block -> hr -> button,
-    // each of the first four rows separated by a blank spacer row (Card JSON 1.0 has no margin control)
+    // body order: project (no label) -> summary (no label) -> short block -> full block -> hr -> button
     expect(zh[0]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: 'std-smart-office-dashboard' } });
-    expect(zh[1]).toEqual(SPACER);
-    expect(zh[2]).toEqual({ tag: 'div', text: { tag: 'lark_md', content: "**TypeError: Cannot read properties of undefined (reading 'x')**" } });
-    expect(zh[3]).toEqual(SPACER);
-    expect(zh[4]).toEqual({
+    expect(zh[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: "TypeError: Cannot read properties of undefined (reading 'x')" } });
+    expect(zh[2]).toEqual({
       tag: 'div',
       fields: [{ is_short: true, text: { tag: 'plain_text', content: '级别\nerror' } }],
     });
-    expect(zh[5]).toEqual(SPACER);
-    expect(zh[6]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '定位线索\nScreen' } });
-    // no spacer between the last content row and the divider — `hr` already carries its own spacing
-    expect(zh[7]).toEqual({ tag: 'hr' });
-    expect(zh[8]).toEqual({
+    expect(zh[3]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '定位线索\nScreen' } });
+    expect(zh[4]).toEqual({ tag: 'hr' });
+    expect(zh[5]).toEqual({
       tag: 'action',
       actions: [{ tag: 'button', text: { tag: 'plain_text', content: '查看详情' }, type: 'default', url: 'https://sentry.example.com/issues/1/' }],
     });
-    expect(zh).toHaveLength(9);
-    expect(en[4].fields[0].text.content).toBe('Level\nerror');
-    expect(en[6].text.content).toBe('Location hint\nScreen');
-    expect(en[8].actions[0].text.content).toBe('View details');
+    expect(en[2].fields[0].text.content).toBe('Level\nerror');
+    expect(en[3].text.content).toBe('Location hint\nScreen');
+    expect(en[5].actions[0].text.content).toBe('View details');
     // no leftover single-language shape
     expect(card).not.toHaveProperty('elements');
   });
@@ -70,17 +57,10 @@ describe('buildFeishuCard', () => {
     expect(json).toContain(`${'E'.repeat(200)}…`);
   });
 
-  it('the summary line is bold (lark_md) so it visually stands out from the regular field text; special characters are escaped', () => {
-    const card = buildFeishuCard({ titleKey: 'errorAlert', color: 'red', summary: '[Vue warn]: *bad* thing_happened `here`', blocks: [] });
-    const summaryRow = stripSpacers((card.i18n_elements as any).zh_cn)[0];
-    expect(summaryRow.text.tag).toBe('lark_md');
-    expect(summaryRow.text.content).toBe('**\\[Vue warn\\]: \\*bad\\* thing\\_happened \\`here\\`**');
-  });
-
   it('missing summary falls back to a translated "(untitled)" placeholder, not an empty line', () => {
     const card = buildFeishuCard({ titleKey: 'errorAlert', color: 'red', blocks: [] });
-    expect((card.i18n_elements as any).zh_cn[0]).toEqual({ tag: 'div', text: { tag: 'lark_md', content: '**(无标题)**' } });
-    expect((card.i18n_elements as any).en_us[0]).toEqual({ tag: 'div', text: { tag: 'lark_md', content: '**(untitled)**' } });
+    expect((card.i18n_elements as any).zh_cn[0]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '(无标题)' } });
+    expect((card.i18n_elements as any).en_us[0]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '(untitled)' } });
   });
 
   it('project display prefers name, then slug, then "#id"; omitted entirely when all are unknown', () => {
@@ -94,8 +74,8 @@ describe('buildFeishuCard', () => {
     expect((withIdOnly.i18n_elements as any).zh_cn[0].text.content).toBe('#4');
 
     const withoutProject = buildFeishuCard({ titleKey: 'errorAlert', color: 'red', blocks: [] });
-    // first element is then the (bold) summary placeholder, not a project line
-    expect((withoutProject.i18n_elements as any).zh_cn[0].text.content).toBe('**(无标题)**');
+    // first element is then the summary placeholder, not a project line
+    expect((withoutProject.i18n_elements as any).zh_cn[0].text.content).toBe('(无标题)');
   });
 
   it('no environment: header title is just the type text, no leading separator', () => {
@@ -131,7 +111,7 @@ describe('buildFeishuCard', () => {
         { kind: 'short', fields: [{ labelKey: 'level', value: 'error' }] },
       ],
     });
-    const zh = stripSpacers((card.i18n_elements as any).zh_cn);
+    const zh = (card.i18n_elements as any).zh_cn;
     // project omitted (no project data) -> summary -> triggeredRule (full) -> fields grid
     expect(zh[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '触发规则\nProduction error alert' } });
     expect(zh[2].fields).toBeDefined();
@@ -144,8 +124,25 @@ describe('buildFeishuCard', () => {
       summary: 'x',
       blocks: [{ kind: 'note', noteKey: 'cumulativeStats' }],
     });
-    expect(stripSpacers((card.i18n_elements as any).zh_cn)[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '统计为该 Issue 的累计值。' } });
-    expect(stripSpacers((card.i18n_elements as any).en_us)[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: 'Cumulative totals for this issue.' } });
+    expect((card.i18n_elements as any).zh_cn[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '统计为该 Issue 的累计值。' } });
+    expect((card.i18n_elements as any).en_us[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: 'Cumulative totals for this issue.' } });
+  });
+
+  it('multiple separate "short" blocks each render as their own fields row, with a distinct row between them', () => {
+    const card = buildFeishuCard({
+      titleKey: 'errorAlert',
+      color: 'red',
+      blocks: [
+        { kind: 'short', fields: [{ labelKey: 'level', value: 'error' }, { labelKey: 'eventTime', value: '2026-01-01 00:00:00 (UTC+03:00)' }] },
+        { kind: 'short', fields: [{ labelKey: 'triggeredRule', value: 'Rule A' }, { labelKey: 'locationHint', value: 'Screen' }] },
+      ],
+    });
+    const zh = (card.i18n_elements as any).zh_cn;
+    // two distinct rows, not one row with all 4 fields packed together
+    expect(zh[1].fields).toHaveLength(2);
+    expect(zh[2].fields).toHaveLength(2);
+    expect(zh[1].fields.map((f: any) => f.text.content)).toEqual(['级别\nerror', '时间\n2026-01-01 00:00:00 (UTC+03:00)']);
+    expect(zh[2].fields.map((f: any) => f.text.content)).toEqual(['触发规则\nRule A', '定位线索\nScreen']);
   });
 
   it('no blocks -> no extra rows; no url -> no hr, no button (fallback/notification shape)', () => {
@@ -163,7 +160,6 @@ describe('buildFeishuCard', () => {
       ],
     });
     const zh = (card.i18n_elements as any).zh_cn;
-    // 'notification' skips the summary row, and this card has a single block -> no spacer needed either
     expect(zh).toHaveLength(1);
     expect(zh[0]).toEqual({
       tag: 'div',

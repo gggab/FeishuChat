@@ -120,9 +120,16 @@ function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] 
   const appVersion = isFlutterish ? formatAppVersion(contexts.app) : undefined;
 
   return [
+    // level/time and triggeredRule/locationHint are two separate row-blocks (not one flowing group of
+    // 4 fields) — each is its own `fields` div, which is what gives them a visible gap between the two
+    // rows, matching the "问题已解决" card's per-pair blocks (docs/sentry-card/event-alert-card-content.md
+    // pairs level with time and triggeredRule with locationHint; packing all 4 into one block instead
+    // rendered the two rows flush against each other).
     ...shortFields(
       { labelKey: 'level', value: level },
       formatDisplayDateTime(ev.datetime) ? { labelKey: 'eventTime', value: formatDisplayDateTime(ev.datetime)! } : undefined,
+    ),
+    ...shortFields(
       triggeredRule ? { labelKey: 'triggeredRule', value: String(triggeredRule) } : undefined,
       culprit ? { labelKey: 'locationHint', value: culprit } : undefined,
     ),
