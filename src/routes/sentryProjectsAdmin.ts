@@ -2,10 +2,12 @@ import express, { Express } from 'express';
 import { AppConfig } from '../config.js';
 import { page } from '../htmlPage.js';
 import { SentryProjectStore } from '../sentryProjectStore.js';
+import { isValidTimeZone, SentrySettingsStore } from '../sentrySettingsStore.js';
 
 export interface SentryProjectsAdminDeps {
   config: AppConfig;
   sentryProjectStore: SentryProjectStore;
+  sentrySettingsStore: SentrySettingsStore;
 }
 
 /**
@@ -15,7 +17,7 @@ export interface SentryProjectsAdminDeps {
  * Disabled entirely (503/401) when ADMIN_TOKEN isn't configured.
  */
 export function registerSentryProjectsAdminRoutes(app: Express, deps: SentryProjectsAdminDeps): void {
-  const { config, sentryProjectStore } = deps;
+  const { config, sentryProjectStore, sentrySettingsStore } = deps;
 
   function checkAdminToken(req: express.Request): boolean {
     if (!config.adminToken) return false;
@@ -39,6 +41,14 @@ export function registerSentryProjectsAdminRoutes(app: Express, deps: SentryProj
       page(
         'Sentry project routing',
         `<h1>Sentry project &rarr; Feishu group mapping</h1>
+<div class="card">
+  <p>Card display timezone (used for event time / first-last seen on Sentry alert cards — Feishu cards have no per-viewer timezone, so this is one fixed zone for everyone). IANA name, e.g. <code>Asia/Shanghai</code>, <code>Asia/Riyadh</code>, <code>UTC</code>.</p>
+  <p>
+    <input id="tz" placeholder="Asia/Shanghai" style="padding:6px; width:220px; margin-right:8px;">
+    <button id="saveTz" class="btn" style="padding:8px 20px;">Save</button>
+    <span id="tzMsg" style="margin-left:8px;"></span>
+  </p>
+</div>
 <div class="card">
   <p>Project ID is Sentry's numeric project ID; name / slug are auto-filled after the project's first real alert arrives, no need to fill them in when adding.</p>
   <table id="tbl" style="width:100%; border-collapse: collapse;">
@@ -92,7 +102,27 @@ document.getElementById('add').onclick = async () => {
   document.getElementById('cid').value = '';
   refresh();
 };
+async function refreshTz() {
+  const settings = await api('/admin/sentry-projects/api/settings');
+  document.getElementById('tz').value = settings.timezone;
+}
+document.getElementById('saveTz').onclick = async () => {
+  const timezone = document.getElementById('tz').value.trim();
+  const msg = document.getElementById('tzMsg');
+  if (!timezone) { alert('Timezone is required'); return; }
+  msg.style.color = '';
+  msg.textContent = 'Saving...';
+  try {
+    await api('/admin/sentry-projects/api/settings', { method: 'PUT', body: JSON.stringify({ timezone }) });
+    msg.style.color = 'green';
+    msg.textContent = 'Saved';
+  } catch (err) {
+    msg.style.color = 'red';
+    msg.textContent = 'Save failed: not a recognized IANA timezone name';
+  }
+};
 refresh();
+refreshTz();
 </script>`,
       ),
     );
@@ -104,6 +134,31 @@ refresh();
       return;
     }
     res.json(sentryProjectStore.list());
+  });
+
+  app.get('/admin/sentry-projects/api/settings', (req, res) => {
+    if (!checkAdminToken(req)) {
+      res.status(401).json({ ok: false, message: 'Invalid token or ADMIN_TOKEN not configured' });
+      return;
+    }
+    res.json({ timezone: sentrySettingsStore.getTimezone() });
+  });
+
+  app.put('/admin/sentry-projects/api/settings', (req, res) => {
+    if (!checkAdminToken(req)) {
+      res.status(401).json({ ok: false, message: 'Invalid token or ADMIN_TOKEN not configured' });
+      return;
+    }
+    const { timezone } = req.body ?? {};
+    if (!timezone || typeof timezone !== 'string') {
+      res.status(400).json({ ok: false, message: 'timezone is required (as a string)' });
+      return;
+    }
+    if (!isValidTimeZone(timezone.trim())) {
+      res.status(400).json({ ok: false, message: `Not a recognized IANA timezone name: ${timezone}` });
+      return;
+    }
+    res.json({ ok: true, settings: sentrySettingsStore.setTimezone(timezone.trim()) });
   });
 
   app.post('/admin/sentry-projects/api', (req, res) => {

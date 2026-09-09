@@ -13,6 +13,7 @@ import { FeishuClient } from '../src/feishu.js';
 import { OAuthStateStore } from '../src/oauthState.js';
 import { RateLimiter } from '../src/rateLimit.js';
 import { SentryProjectStore } from '../src/sentryProjectStore.js';
+import { SentrySettingsStore } from '../src/sentrySettingsStore.js';
 import { TokenStore } from '../src/tokenStore.js';
 
 const KEY = 'd'.repeat(64);
@@ -54,6 +55,7 @@ describe('POST /webhooks/sentry', () => {
       audit: new AuditLogger(dir),
       rateLimiter: new RateLimiter(60, 60_000),
       sentryProjectStore: new SentryProjectStore(path.join(dir, 'sentryProjects.json')),
+      sentrySettingsStore: new SentrySettingsStore(path.join(dir, 'sentrySettings.json')),
     });
   }
 

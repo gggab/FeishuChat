@@ -12,6 +12,7 @@ import { RateLimiter } from './rateLimit.js';
 import { registerSentryProjectsAdminRoutes } from './routes/sentryProjectsAdmin.js';
 import { parseSentryAlert, verifySentrySignature } from './sentryAlert.js';
 import { SentryProjectStore } from './sentryProjectStore.js';
+import { SentrySettingsStore } from './sentrySettingsStore.js';
 import { ToolContext } from './tools/context.js';
 import { registerCalendarTools } from './tools/calendar.js';
 import { registerImTools } from './tools/im.js';
@@ -26,10 +27,11 @@ export interface AppDeps {
   audit: AuditLogger;
   rateLimiter: RateLimiter;
   sentryProjectStore: SentryProjectStore;
+  sentrySettingsStore: SentrySettingsStore;
 }
 
 export function createApp(deps: AppDeps): Express {
-  const { config, feishu, tokenStore, stateStore, audit, rateLimiter, sentryProjectStore } = deps;
+  const { config, feishu, tokenStore, stateStore, audit, rateLimiter, sentryProjectStore, sentrySettingsStore } = deps;
   const app = express();
   const redirectUri = `${config.publicBaseUrl}/oauth/callback`;
 
@@ -71,7 +73,7 @@ export function createApp(deps: AppDeps): Express {
       res.json({ ok: true, skipped: resource });
       return;
     }
-    const alert = parseSentryAlert(resource, req.body);
+    const alert = parseSentryAlert(resource, req.body, sentrySettingsStore.getTimezone());
     // 项目已配了专属映射就发到对应群，否则退回默认群（.env 里的 FEISHU_ALERT_CHAT_ID）；两者都没有就不发
     const projectMapping = alert.projectId ? sentryProjectStore.get(alert.projectId) : undefined;
     const chatId = projectMapping?.chatId || feishuAlertChatId;
@@ -97,7 +99,7 @@ export function createApp(deps: AppDeps): Express {
       });
   });
 
-  registerSentryProjectsAdminRoutes(app, { config, sentryProjectStore });
+  registerSentryProjectsAdminRoutes(app, { config, sentryProjectStore, sentrySettingsStore });
 
   app.get('/', (_req, res) => {
     res.send(

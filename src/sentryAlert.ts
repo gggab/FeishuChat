@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { AlertField, AlertMessage, ContentBlock, fullField, noteBlock, shortFields, TitleKey } from './feishuCard.js';
+import { DEFAULT_TIMEZONE } from './sentrySettingsStore.js';
 
 /**
  * Sentry Internal Integration webhook receiver.
@@ -59,26 +60,33 @@ function levelColor(level: string): 'red' | 'orange' | 'blue' {
 }
 
 /**
- * Feishu cards have no per-viewer timezone concept, so timestamps are displayed in this
- * deployment's fixed local offset (Asia/Riyadh, UTC+3) rather than the raw UTC instant —
- * see docs/sentry-card/event-alert-card-content.md row 6. Rendered as one line
- * ("YYYY-MM-DD HH:mm:ss (UTC+03:00)"); an earlier two-line variant (offset on its own line)
- * wasted vertical space in the real Feishu client and was dropped after visual review.
+ * Feishu cards have no per-viewer timezone concept, so timestamps are displayed in one
+ * deployment-wide timezone (configurable on /admin/sentry-projects, see SentrySettingsStore)
+ * rather than the raw UTC instant — see docs/sentry-card/event-alert-card-content.md row 6.
+ * Rendered as one line ("YYYY-MM-DD HH:mm:ss (UTC+03:00)"); an earlier two-line variant
+ * (offset on its own line) wasted vertical space in the real Feishu client and was dropped
+ * after visual review. `timeZone` must be a valid IANA name (SentrySettingsStore.setTimezone
+ * validates this before it's ever persisted) — an invalid name would throw here.
  */
-const DISPLAY_UTC_OFFSET_HOURS = 3;
-function formatDisplayDateTime(iso?: string): string | undefined {
+function formatDisplayDateTime(iso: string | undefined, timeZone: string): string | undefined {
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
-  const shifted = new Date(date.getTime() + DISPLAY_UTC_OFFSET_HOURS * 3600_000);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const y = shifted.getUTCFullYear();
-  const m = pad(shifted.getUTCMonth() + 1);
-  const d = pad(shifted.getUTCDate());
-  const hh = pad(shifted.getUTCHours());
-  const mm = pad(shifted.getUTCMinutes());
-  const ss = pad(shifted.getUTCSeconds());
-  return `${y}-${m}-${d} ${hh}:${mm}:${ss} (UTC+${pad(DISPLAY_UTC_OFFSET_HOURS)}:00)`;
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'longOffset',
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  // Intl gives "GMT+03:00" (or bare "GMT" for UTC); Feishu users expect "UTC+xx:xx"
+  const offset = (get('timeZoneName') || 'GMT').replace('GMT', 'UTC').replace(/^UTC$/, 'UTC+00:00');
+  return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')} (${offset})`;
 }
 
 /** `{module} · {function}（{crash_location}）`, dropping whichever part is missing. */
@@ -110,7 +118,7 @@ function formatAppVersion(app: any): string | undefined {
  * Flutter-only rows (crash module / device / app version) are added as a set, gated on whether
  * any of contexts.module_crash/device/app is present — not on the `platform` field.
  */
-function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] {
+function buildErrorAlertBlocks(ev: any, triggeredRule: string | undefined, timeZone: string): ContentBlock[] {
   const level = String(ev.level ?? 'error').toLowerCase();
   const culprit = ev.culprit ?? ev.message;
   const contexts = ev.contexts ?? {};
@@ -118,6 +126,7 @@ function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] 
   const crashModule = isFlutterish ? formatCrashModule(contexts.module_crash) : undefined;
   const device = isFlutterish ? formatDevice(contexts.device, contexts.os) : undefined;
   const appVersion = isFlutterish ? formatAppVersion(contexts.app) : undefined;
+  const eventTime = formatDisplayDateTime(ev.datetime, timeZone);
 
   return [
     // level/time and triggeredRule/locationHint are two separate row-blocks (not one flowing group of
@@ -125,10 +134,7 @@ function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] 
     // rows, matching the "问题已解决" card's per-pair blocks (docs/sentry-card/event-alert-card-content.md
     // pairs level with time and triggeredRule with locationHint; packing all 4 into one block instead
     // rendered the two rows flush against each other).
-    ...shortFields(
-      { labelKey: 'level', value: level },
-      formatDisplayDateTime(ev.datetime) ? { labelKey: 'eventTime', value: formatDisplayDateTime(ev.datetime)! } : undefined,
-    ),
+    ...shortFields({ labelKey: 'level', value: level }, eventTime ? { labelKey: 'eventTime', value: eventTime } : undefined),
     ...shortFields(
       triggeredRule ? { labelKey: 'triggeredRule', value: String(triggeredRule) } : undefined,
       culprit ? { labelKey: 'locationHint', value: culprit } : undefined,
@@ -149,7 +155,7 @@ function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] 
  * a sibling `data.activity`/`data.alert` object; none of that is verified to exist on the plain 'issue'
  * resource, so this layout is only used here, not shared with the generic issue-lifecycle path.
  */
-function buildActivityResolvedBlocks(issue: any, activity: any, alert: any): ContentBlock[] {
+function buildActivityResolvedBlocks(issue: any, activity: any, alert: any, timeZone: string): ContentBlock[] {
   const level = String(issue.level ?? 'error').toLowerCase();
   // data.issue.shortId (e.g. "STD-SMART-OFFICE-DASHBOARD-7") is the human-facing issue number; data.issue.id is the fallback
   const issueId = issue.shortId ?? (issue.id != null ? `#${issue.id}` : undefined);
@@ -158,8 +164,8 @@ function buildActivityResolvedBlocks(issue: any, activity: any, alert: any): Con
   // count/userCount are cumulative totals for the issue's whole lifetime, not a recent window — 0 is a legitimate value
   const totalEvents = issue.count != null ? String(issue.count) : undefined;
   const totalUsers = issue.userCount != null ? String(issue.userCount) : undefined;
-  const firstSeen = formatDisplayDateTime(issue.firstSeen);
-  const lastSeen = formatDisplayDateTime(issue.lastSeen);
+  const firstSeen = formatDisplayDateTime(issue.firstSeen, timeZone);
+  const lastSeen = formatDisplayDateTime(issue.lastSeen, timeZone);
   const hasStats = totalEvents != null || totalUsers != null || firstSeen != null || lastSeen != null;
 
   return [
@@ -234,8 +240,13 @@ const METRIC_COLOR: Record<string, AlertMessage['color']> = {
   resolved: 'green',
 };
 
-/** Parse a Sentry webhook payload into a generic alert structure (unknown resources/actions fall back to a generic card) */
-export function parseSentryAlert(resource: string, body: any): AlertMessage {
+/**
+ * Parse a Sentry webhook payload into a generic alert structure (unknown resources/actions fall
+ * back to a generic card). `timeZone` controls how event/issue timestamps are displayed on the
+ * card (see SentrySettingsStore, configurable on /admin/sentry-projects) — it defaults to the
+ * gateway's historical fixed display timezone so callers that don't pass one keep prior behavior.
+ */
+export function parseSentryAlert(resource: string, body: any, timeZone: string = DEFAULT_TIMEZONE): AlertMessage {
   if (resource === 'event_alert') {
     const ev = body?.data?.event ?? {};
     const level = String(ev.level ?? 'error').toLowerCase();
@@ -245,7 +256,7 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       environment,
       color: levelColor(level),
       summary: ev.title ?? ev.message,
-      blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule),
+      blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule, timeZone),
       // web_url is the user-facing page; data.event.url is the API URL and must never be used as a link
       url: ev.web_url,
       // event_alert payload only has a numeric project ID, no name; fall back to the API URL for a slug
@@ -334,7 +345,7 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       // ACTIVITY_TYPE_TO_ISSUE_ACTION currently only maps to 'resolved'; the rich stats layout below is
       // specific to that card (see docs/sentry-card/activity-alert-card-content.md) and would need
       // reconsidering, not blind reuse, if another activity type is ever mapped here.
-      blocks: buildActivityResolvedBlocks(issue, body?.data?.activity, body?.data?.alert),
+      blocks: buildActivityResolvedBlocks(issue, body?.data?.activity, body?.data?.alert, timeZone),
       url: issue.web_url,
       projectId,
       projectSlug,
@@ -350,7 +361,7 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       environment,
       color: levelColor(level),
       summary: err.title,
-      blocks: buildErrorAlertBlocks(err),
+      blocks: buildErrorAlertBlocks(err, undefined, timeZone),
       url: err.web_url,
       projectId: err.project != null ? String(err.project) : undefined,
       // error payload only has a numeric project ID, no name; fall back to the detail URL's /projects/<org>/<slug>/ for display

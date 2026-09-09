@@ -65,6 +65,18 @@ describe('parseSentryAlert', () => {
     expect(shortBlocks[1].fields.map((f) => f.labelKey)).toEqual(['triggeredRule', 'locationHint']);
   });
 
+  it('event_alert: the display timezone is configurable (admin-page setting), defaulting to Asia/Riyadh (UTC+3) when not passed', () => {
+    const body = { action: 'triggered', data: { event: { title: 'x', level: 'error', datetime: '2026-09-09T10:05:18.224000Z' } } };
+    const defaulted = parseSentryAlert('event_alert', body);
+    expect(allFields(defaulted.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 13:05:18 (UTC+03:00)' });
+
+    const shanghai = parseSentryAlert('event_alert', body, 'Asia/Shanghai');
+    expect(allFields(shanghai.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 18:05:18 (UTC+08:00)' });
+
+    const utc = parseSentryAlert('event_alert', body, 'UTC');
+    expect(allFields(utc.blocks)).toContainEqual({ labelKey: 'eventTime', value: '2026-09-09 10:05:18 (UTC+00:00)' });
+  });
+
   it('event_alert: missing triggered_rule/release/time is omitted entirely, not shown as a placeholder', () => {
     const msg = parseSentryAlert('event_alert', {
       action: 'triggered',

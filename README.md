@@ -139,6 +139,8 @@ docker run -d --name feishu-mcp-gateway \
 
 `metric_alert` 类型的 payload 没有数字项目 ID，无法参与按项目路由，始终发到默认群。
 
+**卡片时间显示时区（可选）**：同一个 `/admin/sentry-projects` 管理页面顶部可以配置卡片上的时间（事件时间、首次/最近出现）显示成哪个时区——飞书卡片没有"按查看者本地时区显示"的概念，只能网关侧固定选一个。填 IANA 时区名，如 `Asia/Shanghai`、`UTC`；不配置默认是 `Asia/Riyadh`（UTC+3）。这是网关全局的一个设置，不区分项目/群。
+
 ## 五、开发
 
 ```bash
