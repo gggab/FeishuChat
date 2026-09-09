@@ -117,6 +117,17 @@ describe('buildFeishuCard', () => {
     expect(zh[2].fields).toBeDefined();
   });
 
+  it('a "note" block renders as a plain unlabeled caption line', () => {
+    const card = buildFeishuCard({
+      titleKey: 'issueResolved',
+      color: 'green',
+      summary: 'x',
+      blocks: [{ kind: 'note', noteKey: 'cumulativeStats' }],
+    });
+    expect((card.i18n_elements as any).zh_cn[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: '统计为该 Issue 的累计值。' } });
+    expect((card.i18n_elements as any).en_us[1]).toEqual({ tag: 'div', text: { tag: 'plain_text', content: 'Cumulative totals for this issue.' } });
+  });
+
   it('no blocks -> no extra rows; no url -> no hr, no button (fallback/notification shape)', () => {
     const card = buildFeishuCard({
       titleKey: 'notification',

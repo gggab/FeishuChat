@@ -273,7 +273,7 @@ describe('parseSentryAlert', () => {
     expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'action', value: 'ignored' });
   });
 
-  it('activity_alert: status_resolved renders like a resolved issue and still extracts project for routing', () => {
+  it('activity_alert: status_resolved renders the rich "问题已解决" card (changed by, alert name, no stats/note when the sample has none) and still extracts project for routing', () => {
     const msg = parseSentryAlert('activity_alert', {
       action: 'triggered',
       data: {
@@ -290,15 +290,68 @@ describe('parseSentryAlert', () => {
     });
     expect(msg.titleKey).toBe('issueResolved');
     expect(msg.color).toBe('green');
-    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'action', value: 'resolved' });
+    // this card has no "动作" field — the header text already says "已解决"
+    expect(allFields(msg.blocks).some((f) => f.labelKey === 'action')).toBe(false);
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'changedBy', value: 'a@b.com' });
     expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'originalLevel', value: 'error' });
     expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'locationHint', value: 'Screen' });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'alertName', value: 'Smart Office Monitor' });
+    // no shortId/id, count/userCount, or firstSeen/lastSeen in this sample -> no issueId row, no stats, no disclaimer note
+    expect(msg.blocks.some((b) => b.kind === 'full' && b.field.labelKey === 'issueId')).toBe(false);
+    expect(allFields(msg.blocks).some((f) => f.labelKey === 'totalEvents' || f.labelKey === 'totalUsers')).toBe(false);
+    expect(msg.blocks.some((b) => b.kind === 'note')).toBe(false);
     expect(msg.url).toBe('https://sentry.example.com/organizations/org/issues/22/');
     // this is the routing-critical part: project must be extracted even though this resource
     // type isn't the classic 'issue' one, otherwise per-project chat routing silently breaks
     expect(msg.projectId).toBe('4');
     expect(msg.projectSlug).toBe('std-smart-office-dashboard');
     expect(msg.projectName).toBe('std-smart-office-dashboard');
+  });
+
+  it('activity_alert: status_resolved with the full rich payload — issue ID, changed-by username fallback, stats, seen times, and the cumulative-stats note', () => {
+    const msg = parseSentryAlert('activity_alert', {
+      action: 'triggered',
+      data: {
+        issue: {
+          id: '22',
+          shortId: 'STD-SMART-OFFICE-DASHBOARD-7',
+          title: "TypeError: Cannot read properties of undefined (reading 'x')",
+          culprit: 'Screen',
+          level: 'error',
+          count: '104',
+          userCount: 1,
+          firstSeen: '2026-09-06T12:52:30.299000Z',
+          lastSeen: '2026-09-09T10:01:27.786000Z',
+          web_url: 'https://sentry.sensetime-ksa.top/organizations/sentry/issues/22/',
+          project: { id: '4', name: 'std-smart-office-dashboard', slug: 'std-smart-office-dashboard' },
+        },
+        // no `name`, only `username` -> changedBy must fall back to it
+        activity: { type: 'status_resolved', details: { user: { id: 1, username: 'liaowentao@sensetime.com' } } },
+        alert: { id: 8, title: 'Smart Office Monitor', web_url: 'https://sentry.sensetime-ksa.top/organizations/sentry/monitors/alerts/8/' },
+      },
+    });
+    const fields = allFields(msg.blocks);
+    expect(fields).toContainEqual({ labelKey: 'issueId', value: 'STD-SMART-OFFICE-DASHBOARD-7' });
+    expect(fields).toContainEqual({ labelKey: 'changedBy', value: 'liaowentao@sensetime.com' });
+    expect(fields).toContainEqual({ labelKey: 'totalEvents', value: '104' });
+    expect(fields).toContainEqual({ labelKey: 'totalUsers', value: '1' });
+    // offset shown on its own line, matching the Figma "问题已解决" card (distinct from the single-line event_alert time field)
+    expect(fields).toContainEqual({ labelKey: 'firstSeen', value: '2026-09-06 15:52:30\n(UTC+03:00)' });
+    expect(fields).toContainEqual({ labelKey: 'lastSeen', value: '2026-09-09 13:01:27\n(UTC+03:00)' });
+    expect(msg.blocks.some((b) => b.kind === 'note' && b.noteKey === 'cumulativeStats')).toBe(true);
+    // issue.web_url is the link — never data.alert.web_url (the Workflow's own config page)
+    expect(msg.url).toBe('https://sentry.sensetime-ksa.top/organizations/sentry/issues/22/');
+  });
+
+  it('activity_alert: userCount 0 is a legitimate value, not treated as missing', () => {
+    const msg = parseSentryAlert('activity_alert', {
+      action: 'triggered',
+      data: {
+        issue: { title: 'x', level: 'error', userCount: 0, project: { id: '4' } },
+        activity: { type: 'status_resolved' },
+      },
+    });
+    expect(allFields(msg.blocks)).toContainEqual({ labelKey: 'totalUsers', value: '0' });
   });
 
   it('activity_alert: an unrecognized activity.type (e.g. a regression we have not observed yet) falls back generically, but still extracts project', () => {

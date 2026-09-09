@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { AlertField, AlertMessage, ContentBlock, fullField, shortFields, TitleKey } from './feishuCard.js';
+import { AlertField, AlertMessage, ContentBlock, fullField, noteBlock, shortFields, TitleKey } from './feishuCard.js';
 
 /**
  * Sentry Internal Integration webhook receiver.
@@ -59,12 +59,12 @@ function levelColor(level: string): 'red' | 'orange' | 'blue' {
 }
 
 /**
- * Feishu cards have no per-viewer timezone concept, so the event time is displayed in this
+ * Feishu cards have no per-viewer timezone concept, so timestamps are displayed in this
  * deployment's fixed local offset (Asia/Riyadh, UTC+3) rather than the raw UTC instant —
  * see docs/sentry-card/event-alert-card-content.md row 6.
  */
 const DISPLAY_UTC_OFFSET_HOURS = 3;
-function formatEventTime(iso?: string): string | undefined {
+function formatOffsetDateTime(iso?: string): { date: string; offset: string } | undefined {
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
@@ -76,7 +76,22 @@ function formatEventTime(iso?: string): string | undefined {
   const hh = pad(shifted.getUTCHours());
   const mm = pad(shifted.getUTCMinutes());
   const ss = pad(shifted.getUTCSeconds());
-  return `${y}-${m}-${d} ${hh}:${mm}:${ss} (UTC+${pad(DISPLAY_UTC_OFFSET_HOURS)}:00)`;
+  return { date: `${y}-${m}-${d} ${hh}:${mm}:${ss}`, offset: `(UTC+${pad(DISPLAY_UTC_OFFSET_HOURS)}:00)` };
+}
+
+/** `YYYY-MM-DD HH:mm:ss (UTC+03:00)` on one line — used for the event_alert/error card's single time field. */
+function formatEventTime(iso?: string): string | undefined {
+  const parts = formatOffsetDateTime(iso);
+  return parts ? `${parts.date} ${parts.offset}` : undefined;
+}
+
+/**
+ * `YYYY-MM-DD HH:mm:ss` then `(UTC+03:00)` on its own line — matches the Figma "问题已解决" card,
+ * where firstSeen/lastSeen show the offset on a separate line (docs/sentry-card/activity-alert-card-content.md).
+ */
+function formatSeenTime(iso?: string): string | undefined {
+  const parts = formatOffsetDateTime(iso);
+  return parts ? `${parts.date}\n${parts.offset}` : undefined;
 }
 
 /** `{module} · {function}（{crash_location}）`, dropping whichever part is missing. */
@@ -130,6 +145,49 @@ function buildErrorAlertBlocks(ev: any, triggeredRule?: string): ContentBlock[] 
       device ? { labelKey: 'device', value: device } : undefined,
       appVersion ? { labelKey: 'appVersion', value: appVersion } : undefined,
     ),
+  ];
+}
+
+/**
+ * Body-content blocks for the "问题已解决" card (activity_alert, data.activity.type=status_resolved) —
+ * see docs/sentry-card/activity-alert-card-content.md. Richer than the classic 'issue' resource's resolved
+ * card because this resource's `data.issue` carries shortId/count/userCount/firstSeen/lastSeen and there's
+ * a sibling `data.activity`/`data.alert` object; none of that is verified to exist on the plain 'issue'
+ * resource, so this layout is only used here, not shared with the generic issue-lifecycle path.
+ */
+function buildActivityResolvedBlocks(issue: any, activity: any, alert: any): ContentBlock[] {
+  const level = String(issue.level ?? 'error').toLowerCase();
+  // data.issue.shortId (e.g. "STD-SMART-OFFICE-DASHBOARD-7") is the human-facing issue number; data.issue.id is the fallback
+  const issueId = issue.shortId ?? (issue.id != null ? `#${issue.id}` : undefined);
+  // the user who resolved it; firstSeen/lastSeen/assignedTo/actor.name ("Sentry") are NOT this
+  const changedBy = activity?.details?.user?.name ?? activity?.details?.user?.username;
+  // count/userCount are cumulative totals for the issue's whole lifetime, not a recent window — 0 is a legitimate value
+  const totalEvents = issue.count != null ? String(issue.count) : undefined;
+  const totalUsers = issue.userCount != null ? String(issue.userCount) : undefined;
+  const firstSeen = formatSeenTime(issue.firstSeen);
+  const lastSeen = formatSeenTime(issue.lastSeen);
+  const hasStats = totalEvents != null || totalUsers != null || firstSeen != null || lastSeen != null;
+
+  return [
+    ...fullField(issueId ? { labelKey: 'issueId', value: String(issueId) } : undefined),
+    ...shortFields(
+      changedBy ? { labelKey: 'changedBy', value: String(changedBy) } : undefined,
+      { labelKey: 'originalLevel', value: level },
+    ),
+    ...shortFields(
+      issue.culprit ? { labelKey: 'locationHint', value: issue.culprit } : undefined,
+      // data.alert is the Workflow that produced this notification, not a threshold/trigger-rule condition
+      alert?.title ? { labelKey: 'alertName', value: String(alert.title) } : undefined,
+    ),
+    ...shortFields(
+      totalEvents != null ? { labelKey: 'totalEvents', value: totalEvents } : undefined,
+      totalUsers != null ? { labelKey: 'totalUsers', value: totalUsers } : undefined,
+    ),
+    ...shortFields(
+      firstSeen ? { labelKey: 'firstSeen', value: firstSeen } : undefined,
+      lastSeen ? { labelKey: 'lastSeen', value: lastSeen } : undefined,
+    ),
+    ...noteBlock('cumulativeStats', hasStats),
   ];
 }
 
@@ -279,13 +337,10 @@ export function parseSentryAlert(resource: string, body: any): AlertMessage {
       environment,
       color: ISSUE_FIXED_COLOR[action] ?? levelColor(level),
       summary: issue.title,
-      blocks: [
-        ...shortFields(
-          { labelKey: 'action', value: action },
-          { labelKey: action === 'resolved' ? 'originalLevel' : 'level', value: level },
-        ),
-        ...fullField(issue.culprit ? { labelKey: 'locationHint', value: issue.culprit } : undefined),
-      ],
+      // ACTIVITY_TYPE_TO_ISSUE_ACTION currently only maps to 'resolved'; the rich stats layout below is
+      // specific to that card (see docs/sentry-card/activity-alert-card-content.md) and would need
+      // reconsidering, not blind reuse, if another activity type is ever mapped here.
+      blocks: buildActivityResolvedBlocks(issue, body?.data?.activity, body?.data?.alert),
       url: issue.web_url,
       projectId,
       projectSlug,

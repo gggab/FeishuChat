@@ -5,8 +5,10 @@
  *
  * The "错误告警" (event_alert/error) card layout follows the Figma spec —
  * https://www.figma.com/design/3pg9cagKXQp0iUsTZEpTLP/Feishu-Card?node-id=24-2 — and
- * docs/sentry-card/event-alert-card-content.md. Other alert kinds (issue/activity_alert/
- * metric_alert/fallback) reuse the same building blocks but weren't part of that redesign.
+ * docs/sentry-card/event-alert-card-content.md. The "问题已解决" (activity_alert resolved)
+ * card follows node-id=69-2 and docs/sentry-card/activity-alert-card-content.md. Other
+ * alert kinds (issue/metric_alert/fallback) reuse the same building blocks but weren't
+ * part of either redesign.
  */
 
 type Locale = 'zh_cn' | 'en_us';
@@ -25,7 +27,14 @@ export type FieldLabelKey =
   | 'action'
   | 'status'
   | 'alertDescription'
-  | 'resourceType';
+  | 'resourceType'
+  | 'issueId'
+  | 'changedBy'
+  | 'alertName'
+  | 'totalEvents'
+  | 'totalUsers'
+  | 'firstSeen'
+  | 'lastSeen';
 
 const FIELD_LABELS: Record<FieldLabelKey, Record<Locale, string>> = {
   level: { zh_cn: '级别', en_us: 'Level' },
@@ -41,6 +50,19 @@ const FIELD_LABELS: Record<FieldLabelKey, Record<Locale, string>> = {
   status: { zh_cn: '状态', en_us: 'Status' },
   alertDescription: { zh_cn: '告警说明', en_us: 'Alert description' },
   resourceType: { zh_cn: '资源类型', en_us: 'Resource type' },
+  issueId: { zh_cn: '问题编号', en_us: 'Issue ID' },
+  changedBy: { zh_cn: '操作人', en_us: 'Changed by' },
+  alertName: { zh_cn: '告警名称', en_us: 'Alert name' },
+  totalEvents: { zh_cn: '累计事件数', en_us: 'Total events' },
+  totalUsers: { zh_cn: '累计用户数', en_us: 'Total users' },
+  firstSeen: { zh_cn: '首次出现', en_us: 'First seen' },
+  lastSeen: { zh_cn: '最近出现', en_us: 'Last seen' },
+};
+
+/** Fixed, translated standalone caption lines that aren't a label/value field (e.g. a disclaimer under a stats block). */
+export type NoteKey = 'cumulativeStats';
+const NOTE_TEXTS: Record<NoteKey, Record<Locale, string>> = {
+  cumulativeStats: { zh_cn: '统计为该 Issue 的累计值。', en_us: 'Cumulative totals for this issue.' },
 };
 
 /** `action`/`status` field values are translated when recognized; everything else (level, culprit, release...) stays raw/upstream. */
@@ -135,7 +157,7 @@ export interface AlertField {
  *   this is what makes the Figma "missing fields" narrow-card case show two otherwise
  *   unrelated fields side by side instead of leaving blank columns.
  */
-export type ContentBlock = { kind: 'full'; field: AlertField } | { kind: 'short'; fields: AlertField[] };
+export type ContentBlock = { kind: 'full'; field: AlertField } | { kind: 'short'; fields: AlertField[] } | { kind: 'note'; noteKey: NoteKey };
 
 /** Build a 'short' block from possibly-missing fields, in order; omitted entirely if none are present. */
 export function shortFields(...fields: (AlertField | undefined)[]): ContentBlock[] {
@@ -146,6 +168,11 @@ export function shortFields(...fields: (AlertField | undefined)[]): ContentBlock
 /** Build a 'full' block from a possibly-missing field; omitted entirely if not present. */
 export function fullField(field: AlertField | undefined): ContentBlock[] {
   return field ? [{ kind: 'full', field }] : [];
+}
+
+/** Build a standalone caption line, only when `present` (e.g. gated on the stats it explains actually being shown). */
+export function noteBlock(noteKey: NoteKey, present: boolean): ContentBlock[] {
+  return present ? [{ kind: 'note', noteKey }] : [];
 }
 
 export interface AlertMessage {
@@ -205,6 +232,8 @@ export function buildFeishuCard(msg: AlertMessage): Record<string, unknown> {
     for (const block of msg.blocks) {
       if (block.kind === 'full') {
         elements.push(fieldLine(block.field, locale));
+      } else if (block.kind === 'note') {
+        elements.push(textLine(NOTE_TEXTS[block.noteKey][locale]));
       } else if (block.fields.length) {
         elements.push({
           tag: 'div',
