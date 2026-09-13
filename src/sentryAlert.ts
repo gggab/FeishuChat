@@ -252,6 +252,14 @@ const METRIC_COLOR: Record<string, AlertMessage['color']> = {
   resolved: 'green',
 };
 
+/** Issue titles can omit lines that remain available in metadata.value. */
+function issueSummary(issue: any): string | undefined {
+  const value = issue.metadata?.value;
+  if (typeof value !== 'string' || !value.trim()) return issue.title;
+  const type = issue.metadata?.type;
+  return typeof type === 'string' && type.trim() ? `${type}: ${value}` : value;
+}
+
 /**
  * Parse a Sentry webhook payload into a generic alert structure (unknown resources/actions fall
  * back to a generic card). `resolveTimeZone` controls how event/issue timestamps are displayed
@@ -313,7 +321,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       environment,
       // resolved/assigned/archived carry a fixed color regardless of severity; created/unresolved follow the issue's level
       color: ISSUE_FIXED_COLOR[action] ?? levelColor(level),
-      summary: issue.title,
+      summary: issueSummary(issue),
       blocks: [
         ...shortFields(
           { labelKey: 'action', value: action },
@@ -356,7 +364,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       titleKey,
       environment,
       color: ISSUE_FIXED_COLOR[action] ?? levelColor(level),
-      summary: issue.title,
+      summary: issueSummary(issue),
       // ACTIVITY_TYPE_TO_ISSUE_ACTION currently only maps to 'resolved'; the rich stats layout below is
       // specific to that card (see docs/sentry-card/activity-alert-card-content.md) and would need
       // reconsidering, not blind reuse, if another activity type is ever mapped here.

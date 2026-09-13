@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { AlertField, ContentBlock } from '../src/feishuCard.js';
+import { AlertField, buildFeishuCard, ContentBlock } from '../src/feishuCard.js';
 import { parseSentryAlert, verifySentrySignature } from '../src/sentryAlert.js';
 
 const SENTRY_SECRET = 'sentry-client-secret';
@@ -28,6 +28,27 @@ describe('verifySentrySignature', () => {
 });
 
 describe('parseSentryAlert', () => {
+  it.each(['activity_alert', 'issue'])('%s: preserves the complete issue metadata message in the card', (resource) => {
+    const value = 'Unknown error\nCode: 10000\nURL: /std-smart-office-data/api/v1/data/iot/dataSummary';
+    const issue = {
+      title: 'ApiBusinessError: Unknown error',
+      metadata: { type: 'ApiBusinessError', value },
+    };
+    const msg = parseSentryAlert(resource, {
+      action: resource === 'issue' ? 'resolved' : 'triggered',
+      data: { issue, activity: { type: 'status_resolved' } },
+    });
+    expect(msg.summary).toBe(`ApiBusinessError: ${value}`);
+    expect(JSON.stringify(buildFeishuCard(msg))).toContain(JSON.stringify(msg.summary).slice(1, -1));
+  });
+
+  it.each([undefined, { value: '' }, { value: 42 }])('issue: keeps the title when metadata has no usable message (%j)', (metadata) => {
+    const msg = parseSentryAlert('issue', {
+      action: 'created', data: { issue: { title: 'Original title', metadata } },
+    });
+    expect(msg.summary).toBe('Original title');
+  });
+
   it('event_alert: extracts summary, level, event time, triggered rule, location hint, release, and web_url as the link', () => {
     const msg = parseSentryAlert('event_alert', {
       action: 'triggered',

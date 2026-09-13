@@ -97,6 +97,34 @@ describe('POST /webhooks/sentry', () => {
     },
   });
 
+  it('正文诊断按开关输出异常多行原文和当前摘要，不输出完整 payload', async () => {
+    const previous = process.env.SENTRY_DEBUG_TEXT;
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const title = 'ApiBusinessError: Unknown error';
+    const value = 'Unknown error\nCode: 42\nURL: /api/example';
+    const body = JSON.stringify({ action: 'triggered', data: { event: {
+      title, exception: { values: [{ type: 'ApiBusinessError', value }] },
+      request: { headers: { Authorization: 'must-not-be-logged' } },
+    } } });
+    try {
+      process.env.SENTRY_DEBUG_TEXT = '0';
+      expect((await postAlert(body, sign(body))).status).toBe(200);
+      expect(log.mock.calls.some(([prefix]) => prefix === '[sentry:text-debug]')).toBe(false);
+      process.env.SENTRY_DEBUG_TEXT = '1';
+      expect((await postAlert(body, sign(body))).status).toBe(200);
+      const debug = log.mock.calls.find(([prefix]) => prefix === '[sentry:text-debug]');
+      expect(debug).toBeDefined();
+      expect(JSON.parse(debug![1])).toMatchObject({
+        title, cardSummary: title, exception: [{ type: 'ApiBusinessError', value }],
+      });
+      expect(debug![1]).not.toContain('must-not-be-logged');
+    } finally {
+      if (previous === undefined) delete process.env.SENTRY_DEBUG_TEXT;
+      else process.env.SENTRY_DEBUG_TEXT = previous;
+      log.mockRestore();
+    }
+  });
+
   it('验签通过则立即返回 200（不等飞书那一趟网络往返），随后异步转发卡片到目标群', async () => {
     const resp = await postAlert(alertBody, sign(alertBody));
     expect(resp.status).toBe(200);
