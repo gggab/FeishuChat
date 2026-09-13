@@ -252,11 +252,11 @@ const METRIC_COLOR: Record<string, AlertMessage['color']> = {
   resolved: 'green',
 };
 
-/** Issue titles can omit lines that remain available in metadata.value. */
-function issueSummary(issue: any): string | undefined {
-  const value = issue.metadata?.value;
-  if (typeof value !== 'string' || !value.trim()) return issue.title;
-  const type = issue.metadata?.type;
+/** Event and issue titles can omit lines that remain available in metadata.value. */
+function errorSummary(event: any): string | undefined {
+  const value = event.metadata?.value;
+  if (typeof value !== 'string' || !value.trim()) return event.title ?? event.message;
+  const type = event.metadata?.type;
   return typeof type === 'string' && type.trim() ? `${type}: ${value}` : value;
 }
 
@@ -278,7 +278,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       titleKey: 'errorAlert',
       environment,
       color: levelColor(level),
-      summary: ev.title ?? ev.message,
+      summary: errorSummary(ev),
       blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule, resolveTimeZone(projectId)),
       // web_url is the user-facing page; data.event.url is the API URL and must never be used as a link
       url: ev.web_url,
@@ -321,7 +321,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       environment,
       // resolved/assigned/archived carry a fixed color regardless of severity; created/unresolved follow the issue's level
       color: ISSUE_FIXED_COLOR[action] ?? levelColor(level),
-      summary: issueSummary(issue),
+      summary: errorSummary(issue),
       blocks: [
         ...shortFields(
           { labelKey: 'action', value: action },
@@ -364,7 +364,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       titleKey,
       environment,
       color: ISSUE_FIXED_COLOR[action] ?? levelColor(level),
-      summary: issueSummary(issue),
+      summary: errorSummary(issue),
       // ACTIVITY_TYPE_TO_ISSUE_ACTION currently only maps to 'resolved'; the rich stats layout below is
       // specific to that card (see docs/sentry-card/activity-alert-card-content.md) and would need
       // reconsidering, not blind reuse, if another activity type is ever mapped here.
@@ -384,7 +384,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       titleKey: 'errorAlert',
       environment,
       color: levelColor(level),
-      summary: err.title,
+      summary: errorSummary(err),
       blocks: buildErrorAlertBlocks(err, undefined, resolveTimeZone(projectId)),
       url: err.web_url,
       projectId,

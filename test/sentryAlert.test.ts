@@ -28,6 +28,26 @@ describe('verifySentrySignature', () => {
 });
 
 describe('parseSentryAlert', () => {
+  it.each(['event_alert', 'error'])('%s: preserves the reported ApiBusinessError code and URL in both card languages', (resource) => {
+    const value = 'This module is temporarily unavailable\nCode: 10003\nURL: /std-smart-office-data/api/v1/data/iot/mapDesk';
+    const event = {
+      event_id: '8d126363f6944d7b8f876828cceffb96',
+      title: 'ApiBusinessError: This module is temporarily unavailable',
+      message: '',
+      exception: { values: [{ type: 'ApiBusinessError', value }] },
+      metadata: { type: 'ApiBusinessError', value },
+    };
+    const msg = parseSentryAlert(resource, {
+      action: resource === 'error' ? 'created' : 'triggered',
+      data: { [resource === 'error' ? 'error' : 'event']: event },
+    });
+    expect(msg.summary).toBe(`ApiBusinessError: ${value}`);
+    const card = buildFeishuCard(msg);
+    for (const locale of ['zh_cn', 'en_us']) {
+      expect((card.i18n_elements as any)[locale][0].text.content).toBe(`**ApiBusinessError: ${value}**`);
+    }
+  });
+
   it.each(['activity_alert', 'issue'])('%s: preserves the complete issue metadata message in the card', (resource) => {
     const value = 'Unknown error\nCode: 10000\nURL: /std-smart-office-data/api/v1/data/iot/dataSummary';
     const issue = {
