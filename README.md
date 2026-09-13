@@ -130,16 +130,59 @@ docker run -d --name feishu-mcp-gateway \
 
 网关用 `Sentry-Hook-Signature`（HMAC-SHA256）验签，伪造请求会被 401 拒绝；`SENTRY_WEBHOOK_SECRET` 缺失时端点整体返回 503，不影响其他功能。发送用的是 `tenant_access_token`（应用身份），网关内缓存、距过期 5 分钟自动重取。
 
-**按项目路由到不同群（可选）**：访问 `http://<网关地址>:3000/admin/sentry-projects?token=<ADMIN_TOKEN>`（先在 `.env` 配好 `ADMIN_TOKEN`）管理"项目 → 群"映射：
+### Sentry 项目配置页（Alert routing settings）
 
-- 新增映射只需填 **Sentry 项目 ID**(数字，Sentry 项目设置页能看到) 和目标群 `chat_id`；
-- 项目名 / slug 不用手填，会在**该项目第一次真实告警到达后自动回填**，方便核对填的项目 ID 对不对；
-- 命中映射的项目发到对应群；没配映射的项目发到 `.env` 的 `FEISHU_ALERT_CHAT_ID` 默认群；如果默认群也没配（留空），未映射项目的告警会被跳过、不发送；
-- 目标群不存在 / 机器人不在群里导致发送失败时，也只是记日志跳过，不会当作网关故障返回错误（避免 Sentry 触发重试风暴）。
+配置页用于管理「Sentry 项目 → 飞书群」映射，并为每条映射设置告警卡片的时间显示时区。使用前先完成上面的机器人权限、入群和 Sentry webhook 配置；保存映射不会自动配置 Sentry 告警规则。
 
-`metric_alert` 类型的 payload 没有数字项目 ID，无法参与按项目路由，始终发到默认群。
+#### 启用与访问
 
-**卡片时间显示时区（可选，按项目/群单独配置）**：飞书卡片没有"按查看者本地时区显示"的概念，只能固定选一个时区渲染成文本。在同一个新增映射的表单里可以给每条"项目 → 群"映射额外填一个 IANA 时区名（如 `Asia/Shanghai`），面向不同地区的群就配不同的时区——比如中国群配 `Asia/Shanghai`（UTC+8），利雅得群配 `Asia/Riyadh`（UTC+3），互不影响。留空则该项目沿用默认时区 `Asia/Riyadh`（UTC+3），没有任何项目映射的默认群也用这个默认值。
+在**服务器部署目录的 `.env`** 中设置以下配置（占位值需替换）：
+
+```dotenv
+# 配置页的管理员访问口令，设置为独立的随机长字符串
+ADMIN_TOKEN=<管理员访问口令>
+# 可选：未配置项目映射时使用的默认群，留空则跳过这些告警
+FEISHU_ALERT_CHAT_ID=oc_xxx
+```
+
+修改 `.env` 后重启服务，使配置生效。systemd 部署执行 `sudo systemctl restart feishu-mcp-gateway`；PM2 部署执行 `pm2 restart feishu-mcp-gateway`；Docker 使用 `--env-file` 部署时需用原有端口和数据挂载重建容器，单纯重启容器不会重新读取 env 文件。
+
+浏览器访问以下地址，替换为实际网关地址和管理员口令；有反向代理时使用对外域名：
+
+```text
+http://<网关地址>:3000/admin/sentry-projects?token=<ADMIN_TOKEN>
+```
+
+`ADMIN_TOKEN` 未配置时页面返回 **503**；访问口令缺失或错误时返回 **401**。此口令不是飞书 App Secret，也不是 Sentry Client Secret；含口令的管理页链接不要分享给普通用户。
+
+#### 新增、编辑与删除
+
+1. 点击 **Add configuration**，填写以下字段：
+
+   | 字段 | 填写方式 |
+   |---|---|
+   | Sentry project ID | Sentry 项目的数字 ID，可在 Sentry 项目设置页查看；不要填项目名或 slug。 |
+   | Feishu chat ID | 目标飞书群的 `chat_id`（`oc_` 开头），机器人必须已加入该群。可通过 `list_chats` 查询。 |
+   | Timezone | 默认 `Asia/Riyadh`。可搜索城市或 IANA 时区名，选择 `Asia/Shanghai` 等时区；也支持输入其他有效 IANA 时区名。 |
+
+2. 查看 **Timestamp preview** 的 UTC → 所选时区换算示例，点击 **Save configuration** 保存。预览使用当前时间，不会发送测试告警。
+3. 列表中的项目名 / slug 会在该项目的真实告警到达后自动回填；此前显示 **waiting for first alert**，不需要手动填写项目名。
+4. 点击 **Edit** 可修改目标群和时区，再点击 **Save changes**。项目 ID 不可编辑；如果 ID 填错，删除原映射后重新新增。每个项目 ID 只有一条映射，再次新增同一个 ID 会更新已有配置。
+5. 点击 **Delete** 并确认后删除映射。该项目后续告警改走默认群；默认群未配置则跳过发送。
+
+#### 路由与时区规则
+
+- 命中项目映射时使用对应飞书群；未命中时使用 `.env` 的 `FEISHU_ALERT_CHAT_ID`，默认群留空则不发送。
+- `metric_alert` 类型的 payload 没有数字项目 ID，无法参与按项目路由，使用默认群。
+- 时区按映射独立设置。例如中国群使用 `Asia/Shanghai`（UTC+8），利雅得群使用 `Asia/Riyadh`（UTC+3）。没有专属时区的映射和默认群均使用 `Asia/Riyadh`。
+- 卡片时间是发送时生成的固定文本，不随查看者设备时区变化。修改配置只影响之后发送的卡片，不会更新已经发送的消息。
+- 目标群不存在或机器人不在群里导致发送失败时，服务记录日志，不会转发到默认群，也不会作为 webhook 错误要求 Sentry 重试。
+
+#### 生效与数据保存
+
+配置页保存或删除成功后，**无需重启服务**，后续告警即使用新配置。映射保存在 `DATA_DIR/sentryProjects.json`（默认 `./data/sentryProjects.json`），不写入 `.env`。
+
+重新部署时保留原来的数据目录；Docker 按部署示例挂载 `/app/data`，自定义 `DATA_DIR` 时挂载对应目录。服务运行用户需有数据目录写权限。验证配置时，检查列表中的项目 ID、群 ID 和时区，再通过真实 Sentry 告警确认目标群收到卡片；保存成功只代表映射已保存，不代表消息已送达。
 
 ## 五、开发
 
