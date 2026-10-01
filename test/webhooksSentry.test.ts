@@ -28,6 +28,7 @@ describe('POST /webhooks/sentry', () => {
   let server: Server;
   let baseUrl: string;
   let feishuPost: ReturnType<typeof vi.fn>;
+  let projectStore: SentryProjectStore;
 
   const config: AppConfig = {
     appId: 'cli_test',
@@ -53,7 +54,7 @@ describe('POST /webhooks/sentry', () => {
       stateStore: new OAuthStateStore(),
       audit: new AuditLogger(dir),
       rateLimiter: new RateLimiter(60, 60_000),
-      sentryProjectStore: new SentryProjectStore(path.join(dir, 'sentryProjects.json')),
+      sentryProjectStore: projectStore,
     });
   }
 
@@ -61,6 +62,7 @@ describe('POST /webhooks/sentry', () => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sentry-test-'));
     config.dataDir = dir;
     config.logDir = dir;
+    projectStore = new SentryProjectStore(path.join(dir, 'sentryProjects.json'));
     feishuPost = vi.fn().mockImplementation((url: string) => {
       if (url === '/auth/v3/tenant_access_token/internal') {
         return Promise.resolve({ data: { code: 0, msg: 'ok', tenant_access_token: 't-1', expire: 7200 } });
@@ -245,6 +247,40 @@ describe('POST /webhooks/sentry', () => {
     } finally {
       await new Promise<void>((resolve) => noDefaultServer.close(() => resolve()));
     }
+  });
+
+  it('按项目和环境路由，未匹配时逐级回退，卡片使用最终目标群的时区', async () => {
+    projectStore.upsert('4', 'oc_project', 'UTC');
+    projectStore.upsert('4', 'oc_prod', 'Asia/Riyadh', 'production');
+    projectStore.upsert('4', 'oc_stage', 'Asia/Shanghai', 'staging');
+    projectStore.upsert('5', 'oc_other_prod', 'UTC', 'production');
+    const event = { title: 'x', project: 4, datetime: '2026-09-09T10:05:18Z' };
+    const issue = { title: 'x', project: { id: 4, slug: 'dashboard', name: 'Dashboard' }, lastSeen: '2026-09-09T10:05:18Z' };
+    const cases = [
+      { resource: 'event_alert', data: { event: { ...event, environment: 'production' } }, chatId: 'oc_prod', time: '2026-09-09 13:05:18 (UTC+03:00)' },
+      { resource: 'event_alert', data: { event: { ...event, tags: [['environment', 'staging']] } }, chatId: 'oc_stage', time: '2026-09-09 18:05:18 (UTC+08:00)' },
+      { resource: 'error', data: { error: { ...event, tags: [{ key: 'environment', value: 'staging' }] } }, chatId: 'oc_stage', time: '2026-09-09 18:05:18 (UTC+08:00)' },
+      { resource: 'issue', data: { issue: { ...issue, environment: 'production' } }, chatId: 'oc_prod' },
+      { resource: 'activity_alert', data: { issue: { ...issue, tags: [['environment', 'staging']] }, activity: { type: 'status_resolved' } }, chatId: 'oc_stage', time: '2026-09-09 18:05:18 (UTC+08:00)' },
+      { resource: 'activity_alert', data: { issue: { ...issue, environment: 'production' }, activity: { type: 'unknown' } }, chatId: 'oc_prod' },
+      { resource: 'event_alert', data: { event: { ...event, environment: 'Production' } }, chatId: 'oc_project', time: '2026-09-09 10:05:18 (UTC+00:00)' },
+      { resource: 'event_alert', data: { event }, chatId: 'oc_project' },
+      { resource: 'event_alert', data: { event: { ...event, project: 5, environment: 'production' } }, chatId: 'oc_other_prod' },
+      { resource: 'event_alert', data: { event: { ...event, project: 5, environment: 'staging' } }, chatId: CHAT_ID, time: '2026-09-09 13:05:18 (UTC+03:00)' },
+      { resource: 'metric_alert', data: { metric_alert: { title: 'metric', alert_rule: { environment: 'production', projects: ['dashboard'] } } }, chatId: CHAT_ID },
+    ];
+    for (const testCase of cases) {
+      feishuPost.mockClear();
+      const body = JSON.stringify({ action: testCase.resource === 'issue' ? 'created' : testCase.resource === 'metric_alert' ? 'critical' : 'triggered', data: testCase.data });
+      expect((await postAlert(body, sign(body), testCase.resource)).status).toBe(200);
+      await vi.waitFor(() => {
+        const sends = feishuPost.mock.calls.filter(([url]) => String(url).startsWith('/im/v1/messages'));
+        expect(sends).toHaveLength(1);
+        expect(sends[0][1].receive_id).toBe(testCase.chatId);
+        if (testCase.time) expect(sends[0][1].content).toContain(testCase.time);
+      });
+    }
+    expect(projectStore.list().filter(record => record.projectId === '4').every(record => record.name === 'Dashboard')).toBe(true);
   });
 
   it('签名错误返回 401，不调用飞书接口', async () => {

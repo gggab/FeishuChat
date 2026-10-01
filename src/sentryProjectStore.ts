@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * Sentry 项目 ID → 飞书群 chat_id 的映射，用于按项目路由告警。
- * 通过管理页面手动新增（projectId + chatId + 可选 timezone），slug/name 在收到该项目
+ * Sentry 项目 ID + 可选 environment → 飞书群 chat_id 的映射。
+ * 未匹配环境专属映射时回退到项目默认映射。slug/name 在收到该项目
  * 第一条真实告警后自动回填，不会覆盖已有值、也不会自动新增映射。
  *
  * timezone 是这条映射（也就是目标群）专属的卡片时间显示时区——飞书卡片没有"按查看者
@@ -13,6 +13,8 @@ import path from 'node:path';
  */
 export interface SentryProjectRecord {
   projectId: string;
+  /** Sentry environment 原值，区分大小写；未设置则为项目默认映射 */
+  environment?: string;
   chatId: string;
   slug?: string;
   name?: string;
@@ -52,10 +54,11 @@ export class SentryProjectStore {
     try {
       const raw = fs.readFileSync(this.filePath, 'utf8');
       const parsed = JSON.parse(raw) as StoreFile;
-      if (!parsed || typeof parsed !== 'object' || typeof parsed.projects !== 'object') {
+      if (!parsed || typeof parsed !== 'object' || !parsed.projects || typeof parsed.projects !== 'object') {
         return { projects: {} };
       }
-      return parsed;
+      // 旧文件按 projectId 存储；统一重建索引，无需手动迁移。
+      return { projects: Object.fromEntries(Object.values(parsed.projects).map(record => [this.key(record.projectId, record.environment), record])) };
     } catch (err: unknown) {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { projects: {} };
       throw new Error(`读取 Sentry 项目映射文件失败：${this.filePath}，${(err as Error).message}`);
@@ -72,11 +75,15 @@ export class SentryProjectStore {
   }
 
   list(): SentryProjectRecord[] {
-    return Object.values(this.data.projects).sort((a, b) => a.projectId.localeCompare(b.projectId));
+    return Object.values(this.data.projects).sort((a, b) => a.projectId.localeCompare(b.projectId) || (a.environment ?? '').localeCompare(b.environment ?? ''));
   }
 
-  get(projectId: string): SentryProjectRecord | undefined {
-    return this.data.projects[projectId];
+  private key(projectId: string, environment?: string): string {
+    return JSON.stringify([projectId, typeof environment === 'string' ? environment.trim() : '']);
+  }
+
+  get(projectId: string, environment?: string): SentryProjectRecord | undefined {
+    return this.data.projects[this.key(projectId, environment)] ?? this.data.projects[this.key(projectId)];
   }
 
   /**
@@ -84,9 +91,15 @@ export class SentryProjectStore {
    * `timezone` 未传（undefined）时保留原有值；传空字符串表示清空（改回用 DEFAULT_TIMEZONE 兜底）；
    * 传非空字符串时必须是 Intl 认识的合法 IANA 时区名，否则抛错，不会静默存一个坏值进去。
    */
-  upsert(projectId: string, chatId: string, timezone?: string): SentryProjectRecord {
+  upsert(projectId: string, chatId: string, timezone?: string, environment?: string): SentryProjectRecord {
+    projectId = projectId.trim();
+    chatId = chatId.trim();
+    environment = environment?.trim() || undefined;
+    if (!projectId || !chatId) throw new Error('projectId and chatId must not be blank');
+    const key = this.key(projectId, environment);
     const now = Date.now();
-    const existing = this.data.projects[projectId];
+    const existing = this.data.projects[key];
+    const projectInfo = existing ?? this.list().find(record => record.projectId === projectId);
     let resolvedTimezone = existing?.timezone;
     if (timezone !== undefined) {
       const trimmed = timezone.trim();
@@ -100,41 +113,39 @@ export class SentryProjectStore {
     }
     const record: SentryProjectRecord = {
       projectId,
+      environment,
       chatId,
-      slug: existing?.slug,
-      name: existing?.name,
+      slug: projectInfo?.slug,
+      name: projectInfo?.name,
       timezone: resolvedTimezone,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
-    this.data.projects[projectId] = record;
+    this.data.projects[key] = record;
     this.saveToDisk();
     return record;
   }
 
-  remove(projectId: string): boolean {
-    if (!this.data.projects[projectId]) return false;
-    delete this.data.projects[projectId];
+  remove(projectId: string, environment?: string): boolean {
+    const key = this.key(projectId, environment);
+    if (!this.data.projects[key]) return false;
+    delete this.data.projects[key];
     this.saveToDisk();
     return true;
   }
 
   /** 收到真实告警后为已存在的映射补充 slug/name；映射不存在时不做任何事 */
   enrich(projectId: string, info: { slug?: string; name?: string }): void {
-    const record = this.data.projects[projectId];
-    if (!record) return;
     let changed = false;
-    if (info.slug && record.slug !== info.slug) {
-      record.slug = info.slug;
-      changed = true;
+    for (const record of Object.values(this.data.projects)) {
+      if (record.projectId !== projectId) continue;
+      if ((info.slug && record.slug !== info.slug) || (info.name && record.name !== info.name)) {
+        if (info.slug) record.slug = info.slug;
+        if (info.name) record.name = info.name;
+        record.updatedAt = Date.now();
+        changed = true;
+      }
     }
-    if (info.name && record.name !== info.name) {
-      record.name = info.name;
-      changed = true;
-    }
-    if (changed) {
-      record.updatedAt = Date.now();
-      this.saveToDisk();
-    }
+    if (changed) this.saveToDisk();
   }
 }

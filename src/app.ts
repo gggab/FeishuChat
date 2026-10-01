@@ -71,8 +71,8 @@ export function createApp(deps: AppDeps): Express {
       res.json({ ok: true, skipped: resource });
       return;
     }
-    // 每个项目映射（也就是它转发到的那个群）可以各配各的显示时区；没有映射或映射没配时区就用默认值
-    const alert = parseSentryAlert(resource, req.body, (projectId) => (projectId && sentryProjectStore.get(projectId)?.timezone) || DEFAULT_TIMEZONE);
+    // 时区与目标群使用同一条映射：项目 + 环境优先，再回退到项目默认。
+    const alert = parseSentryAlert(resource, req.body, (projectId, environment) => (projectId && sentryProjectStore.get(projectId, environment)?.timezone) || DEFAULT_TIMEZONE);
     // Temporary opt-in diagnosis: compare upstream text with the selected card summary.
     // Only inspect text fields; do not dump request headers, user data, or the whole payload.
     if (process.env.SENTRY_DEBUG_TEXT === '1') {
@@ -94,15 +94,15 @@ export function createApp(deps: AppDeps): Express {
         cardSummary: alert.summary,
       }));
     }
-    // 项目已配了专属映射就发到对应群，否则退回默认群（.env 里的 FEISHU_ALERT_CHAT_ID）；两者都没有就不发
-    const projectMapping = alert.projectId ? sentryProjectStore.get(alert.projectId) : undefined;
+    // 项目 + 环境映射 → 项目默认映射 → 全局默认群；都没有就不发。
+    const projectMapping = alert.projectId ? sentryProjectStore.get(alert.projectId, alert.environment) : undefined;
     const chatId = projectMapping?.chatId || feishuAlertChatId;
     // 收到真实告警时，为已存在的项目映射自动回填 slug/name，方便管理页面展示
     if (alert.projectId && (alert.projectSlug || alert.projectName)) {
       sentryProjectStore.enrich(alert.projectId, { slug: alert.projectSlug, name: alert.projectName });
     }
     if (!chatId) {
-      console.log(`[sentry] 未找到可用的飞书群（项目=${alert.projectId ?? '-'} 且默认群未配置），跳过发送`);
+      console.log(`[sentry] 未找到可用的飞书群（项目=${alert.projectId ?? '-'} 环境=${alert.environment ?? '-'} 且默认群未配置），跳过发送`);
       res.json({ ok: true, skipped: 'no_chat_id' });
       return;
     }
@@ -111,7 +111,7 @@ export function createApp(deps: AppDeps): Express {
     feishu
       .sendCardMessage(chatId, buildFeishuCard(alert))
       .then(() => {
-        console.log(`[sentry] 已转发告警到飞书群：resource=${resource} project=${alert.projectId ?? '-'} chatId=${chatId}`);
+        console.log(`[sentry] 已转发告警到飞书群：resource=${resource} project=${alert.projectId ?? '-'} environment=${alert.environment ?? '-'} chatId=${chatId}`);
       })
       .catch((err: unknown) => {
         // 目标群不存在/机器人不在群里等发送失败，响应已经发给 Sentry 了，这里只记录日志

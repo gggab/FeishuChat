@@ -4,13 +4,13 @@ import { DEFAULT_TIMEZONE } from './sentryProjectStore.js';
 
 /**
  * Resolves which IANA timezone to display card timestamps in, given the alert's numeric Sentry
- * project ID (undefined for resource types that don't carry one, e.g. metric_alert). Timezone is
- * a per-project-mapping setting (different groups serve different regions), not a single global
+ * project ID and environment (ID is undefined for resource types such as metric_alert). Timezone is
+ * a per-route setting (different groups serve different regions), not a single global
  * one — see SentryProjectStore.timezone. The default resolver ignores projectId and always
  * returns DEFAULT_TIMEZONE, so callers that don't care about per-project timezones (tests, the
  * one-off simulate script) keep the old fixed-offset-equivalent behavior unchanged.
  */
-export type ResolveTimeZone = (projectId: string | undefined) => string;
+export type ResolveTimeZone = (projectId: string | undefined, environment?: string) => string;
 const defaultResolveTimeZone: ResolveTimeZone = () => DEFAULT_TIMEZONE;
 
 /**
@@ -263,8 +263,8 @@ function errorSummary(event: any): string | undefined {
 /**
  * Parse a Sentry webhook payload into a generic alert structure (unknown resources/actions fall
  * back to a generic card). `resolveTimeZone` controls how event/issue timestamps are displayed
- * on the card — it's given the alert's numeric project ID (once known) and returns the IANA zone
- * for that project's mapping (see SentryProjectStore.timezone, configurable per project/group on
+ * on the card — it's given the alert's numeric project ID and environment and returns the IANA zone
+ * for that route's mapping (see SentryProjectStore.timezone, configurable per project/environment on
  * /admin/sentry-projects). Defaults to always DEFAULT_TIMEZONE so callers that don't care about
  * per-project timezones keep prior behavior.
  */
@@ -279,7 +279,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       environment,
       color: levelColor(level),
       summary: errorSummary(ev),
-      blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule, resolveTimeZone(projectId)),
+      blocks: buildErrorAlertBlocks(ev, body?.data?.triggered_rule, resolveTimeZone(projectId, environment)),
       // web_url is the user-facing page; data.event.url is the API URL and must never be used as a link
       url: ev.web_url,
       // event_alert payload only has a numeric project ID, no name; fall back to the API URL for a slug
@@ -345,11 +345,13 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
     const projectId = issue.project?.id != null ? String(issue.project.id) : undefined;
     const projectSlug = issue.project?.slug;
     const projectName = issue.project?.name;
+    const environment = issue.environment ?? tagValue(issue.tags, 'environment');
     const titleKey = action ? ISSUE_TITLE_KEYS[action] : undefined;
     if (!titleKey) {
       console.log(`[sentry] unrecognized activity_alert activity.type=${activityType || '(empty)'}, raw payload: ${JSON.stringify(body)}`);
       return {
         titleKey: 'notification',
+        environment,
         color: 'grey',
         blocks: shortFields({ labelKey: 'resourceType', value: `activity_alert:${activityType || 'unknown'}` }),
         url: issue.web_url,
@@ -359,7 +361,6 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       };
     }
     const level = String(issue.level ?? 'error').toLowerCase();
-    const environment = issue.environment ?? tagValue(issue.tags, 'environment');
     return {
       titleKey,
       environment,
@@ -368,7 +369,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       // ACTIVITY_TYPE_TO_ISSUE_ACTION currently only maps to 'resolved'; the rich stats layout below is
       // specific to that card (see docs/sentry-card/activity-alert-card-content.md) and would need
       // reconsidering, not blind reuse, if another activity type is ever mapped here.
-      blocks: buildActivityResolvedBlocks(issue, body?.data?.activity, body?.data?.alert, resolveTimeZone(projectId)),
+      blocks: buildActivityResolvedBlocks(issue, body?.data?.activity, body?.data?.alert, resolveTimeZone(projectId, environment)),
       url: issue.web_url,
       projectId,
       projectSlug,
@@ -385,7 +386,7 @@ export function parseSentryAlert(resource: string, body: any, resolveTimeZone: R
       environment,
       color: levelColor(level),
       summary: errorSummary(err),
-      blocks: buildErrorAlertBlocks(err, undefined, resolveTimeZone(projectId)),
+      blocks: buildErrorAlertBlocks(err, undefined, resolveTimeZone(projectId, environment)),
       url: err.web_url,
       projectId,
       // error payload only has a numeric project ID, no name; fall back to the detail URL's /projects/<org>/<slug>/ for display

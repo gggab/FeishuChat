@@ -132,7 +132,7 @@ docker run -d --name feishu-mcp-gateway \
 
 ### Sentry 项目配置页（Alert routing settings）
 
-配置页用于管理「Sentry 项目 → 飞书群」映射，并为每条映射设置告警卡片的时间显示时区。使用前先完成上面的机器人权限、入群和 Sentry webhook 配置；保存映射不会自动配置 Sentry 告警规则。
+配置页用于管理「Sentry 项目 + 环境 → 飞书群」映射，并为每条映射设置告警卡片的时间显示时区。使用前先完成上面的机器人权限、入群和 Sentry webhook 配置；保存映射不会自动配置 Sentry 告警规则。
 
 #### 启用与访问
 
@@ -162,19 +162,21 @@ http://<网关地址>:3000/admin/sentry-projects?token=<ADMIN_TOKEN>
    | 字段 | 填写方式 |
    |---|---|
    | Sentry project ID | Sentry 项目的数字 ID，可在 Sentry 项目设置页查看；不要填项目名或 slug。 |
+   | Environment (optional) | 填 Sentry 的环境原值，例如 `production`、`staging`，区分大小写，首尾空格会被去除。留空表示项目默认映射。 |
    | Feishu chat ID | 目标飞书群的 `chat_id`（`oc_` 开头），机器人必须已加入该群。可通过 `list_chats` 查询。 |
    | Timezone | 默认 `Asia/Riyadh`。可搜索城市或 IANA 时区名，选择 `Asia/Shanghai` 等时区；也支持输入其他有效 IANA 时区名。 |
 
 2. 查看 **Timestamp preview** 的 UTC → 所选时区换算示例，点击 **Save configuration** 保存。预览使用当前时间，不会发送测试告警。
 3. 列表中的项目名 / slug 会在该项目的真实告警到达后自动回填；此前显示 **waiting for first alert**，不需要手动填写项目名。
-4. 点击 **Edit** 可修改目标群和时区，再点击 **Save changes**。项目 ID 不可编辑；如果 ID 填错，删除原映射后重新新增。每个项目 ID 只有一条映射，再次新增同一个 ID 会更新已有配置。
-5. 点击 **Delete** 并确认后删除映射。该项目后续告警改走默认群；默认群未配置则跳过发送。
+4. 点击 **Edit** 可修改目标群和时区，再点击 **Save changes**。项目 ID 和环境不可编辑；如果填错，删除原映射后重新新增。同一项目可添加多条不同环境的映射，再次新增相同的「项目 ID + 环境」会更新该配置。
+5. 点击 **Delete** 并确认后只删除所选映射，保留同项目其他环境的配置。删除环境映射后，该环境后续告警回退到项目默认映射；再无匹配则使用全局默认群，全局默认群未配置则跳过发送。
 
 #### 路由与时区规则
 
-- 命中项目映射时使用对应飞书群；未命中时使用 `.env` 的 `FEISHU_ALERT_CHAT_ID`，默认群留空则不发送。
+- 优先匹配「项目 ID + environment」；未匹配或告警未提供环境时，使用环境留空的项目默认映射；再未匹配时使用 `.env` 的 `FEISHU_ALERT_CHAT_ID`，全局默认群留空则不发送。已有的项目映射自动作为项目默认映射，无需手动迁移。
+- 例如同一项目 `4` 可以配置 `production → oc_prod`、`staging → oc_staging`，再加一条环境留空的映射用于接收其他环境或缺少环境的告警。环境取自 Sentry webhook 的 environment 字段或 environment 标签，而非网关自身的运行环境。
 - `metric_alert` 类型的 payload 没有数字项目 ID，无法参与按项目路由，使用默认群。
-- 时区按映射独立设置。例如中国群使用 `Asia/Shanghai`（UTC+8），利雅得群使用 `Asia/Riyadh`（UTC+3）。没有专属时区的映射和默认群均使用 `Asia/Riyadh`。
+- 时区按最终匹配的映射独立设置。例如同项目的生产环境群使用 `Asia/Riyadh`（UTC+3），测试环境群使用 `Asia/Shanghai`（UTC+8）。没有专属时区的映射和全局默认群均使用 `Asia/Riyadh`。
 - 卡片时间是发送时生成的固定文本，不随查看者设备时区变化。修改配置只影响之后发送的卡片，不会更新已经发送的消息。
 - 目标群不存在或机器人不在群里导致发送失败时，服务记录日志，不会转发到默认群，也不会作为 webhook 错误要求 Sentry 重试。
 
@@ -182,7 +184,7 @@ http://<网关地址>:3000/admin/sentry-projects?token=<ADMIN_TOKEN>
 
 配置页保存或删除成功后，**无需重启服务**，后续告警即使用新配置。映射保存在 `DATA_DIR/sentryProjects.json`（默认 `./data/sentryProjects.json`），不写入 `.env`。
 
-重新部署时保留原来的数据目录；Docker 按部署示例挂载 `/app/data`，自定义 `DATA_DIR` 时挂载对应目录。服务运行用户需有数据目录写权限。验证配置时，检查列表中的项目 ID、群 ID 和时区，再通过真实 Sentry 告警确认目标群收到卡片；保存成功只代表映射已保存，不代表消息已送达。
+重新部署时保留原来的数据目录；Docker 按部署示例挂载 `/app/data`，自定义 `DATA_DIR` 时挂载对应目录。服务运行用户需有数据目录写权限。验证配置时，检查列表中的项目 ID、环境、群 ID 和时区，再通过真实 Sentry 告警确认目标群收到卡片；保存成功只代表映射已保存，不代表消息已送达。
 
 ## 五、开发
 
