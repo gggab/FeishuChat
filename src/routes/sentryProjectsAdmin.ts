@@ -121,7 +121,7 @@ export function registerSentryProjectsAdminRoutes(app: Express, deps: SentryProj
   <div class="panel">
     <div class="panel-intro">
       <p class="panel-title" id="panelTitle">Project mappings</p>
-      <p class="muted">Project name is filled after the first real alert. Add an environment to send its alerts to a separate group.</p>
+      <p class="muted">New projects and environments appear automatically after their first alert. Edit pending configurations to choose a group.</p>
     </div>
     <div class="table-wrap">
       <div class="table-head">
@@ -137,7 +137,7 @@ export function registerSentryProjectsAdminRoutes(app: Express, deps: SentryProj
 
   <div class="hint-box">
     <p class="hint-title">Timezone is set per mapping</p>
-    <p class="hint-text">Routes match project + environment first, then the project's default route, then the global default group. Alert timestamps use the matched route's timezone and do not change with the viewer's device timezone.</p>
+    <p class="hint-text">Routes match project + environment first, then the project's default route, then the global default group. Pending configurations use these fallback routes until a group is saved. Alert timestamps use the matched route's timezone and do not change with the viewer's device timezone.</p>
   </div>
 </div>
 
@@ -266,8 +266,8 @@ function renderRows() {
     return '<div class="row" data-id="' + esc(r.projectId) + '">' +
       '<div class="col-project"><div class="project-name">' + nameLine + '</div><div class="project-id">Project ID: ' + esc(r.projectId) + '</div></div>' +
       '<div class="col-env">' + esc(r.environment || 'Project default') + '</div>' +
-      '<div class="col-chat">' + esc(r.chatId) + '</div>' +
-      '<div class="col-tz"><div class="tz-city">' + esc(cityLabelFor(tz)) + '  \\u00b7  ' + esc(offsetLabel(tz)) + '</div><div class="tz-name">' + tzLine2 + '</div></div>' +
+      '<div class="col-chat">' + (r.chatId ? esc(r.chatId) : '<span class="muted">Pending configuration</span>') + '</div>' +
+      '<div class="col-tz">' + (r.chatId ? '<div class="tz-city">' + esc(cityLabelFor(tz)) + '  \\u00b7  ' + esc(offsetLabel(tz)) + '</div><div class="tz-name">' + tzLine2 + '</div>' : '<span class="muted">Uses fallback route</span>') + '</div>' +
       '<div class="col-actions"><button class="btn-outline edit" data-index="' + index + '">Edit</button><button class="btn-outline danger del" data-index="' + index + '">Delete</button></div>' +
       '</div>';
   }).join('');

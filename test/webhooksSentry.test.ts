@@ -40,6 +40,7 @@ describe('POST /webhooks/sentry', () => {
     logDir: '',
     sentryWebhookSecret: SENTRY_SECRET,
     feishuAlertChatId: CHAT_ID,
+    adminToken: 'admin-test',
   };
 
   function buildTestApp(testConfig: AppConfig) {
@@ -231,21 +232,85 @@ describe('POST /webhooks/sentry', () => {
     await new Promise<void>((resolve) => noDefaultServer.listen(0, '127.0.0.1', resolve));
     const noDefaultBase = `http://127.0.0.1:${(noDefaultServer.address() as AddressInfo).port}`;
     try {
+      const undiscoveredBody = JSON.stringify({ action: 'triggered', data: { event: { title: 'x', project: 9, environment: 'production' } } });
       const resp = await fetch(`${noDefaultBase}/webhooks/sentry`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Sentry-Hook-Signature': sign(alertBody),
+          'Sentry-Hook-Signature': sign(undiscoveredBody),
           'Sentry-Hook-Resource': 'event_alert',
         },
-        body: alertBody,
+        body: undiscoveredBody,
       });
       expect(resp.status).toBe(200);
       const body = await resp.json();
       expect(body.skipped).toBe('no_chat_id');
       expect(feishuPost).not.toHaveBeenCalled();
+      expect(new SentryProjectStore(path.join(dir, 'sentryProjects.json')).list()).toEqual([
+        expect.objectContaining({ projectId: '9', environment: 'production', chatId: '' }),
+      ]);
     } finally {
       await new Promise<void>((resolve) => noDefaultServer.close(() => resolve()));
+    }
+  });
+
+  it('自动发现并持久化待配置项目/环境，重复不新增，管理员补群后立即生效', async () => {
+    projectStore.upsert('4', 'oc_project', 'Asia/Shanghai');
+    projectStore.enrich('4', { name: 'Dashboard', slug: 'dashboard' });
+    const event = { title: 'x', project: 4, environment: ' staging ', datetime: '2026-09-09T10:05:18Z' };
+    const send = async (data: object, chatId: string, time?: string) => {
+      feishuPost.mockClear();
+      const body = JSON.stringify({ action: 'triggered', data: { event: data } });
+      expect(await (await postAlert(body, sign(body))).json()).toEqual({ ok: true });
+      await vi.waitFor(() => {
+        const sends = feishuPost.mock.calls.filter(([url]) => String(url).startsWith('/im/v1/messages'));
+        expect(sends).toHaveLength(1);
+        expect(sends[0][1].receive_id).toBe(chatId);
+        if (time) expect(sends[0][1].content).toContain(time);
+      });
+    };
+    await send(event, 'oc_project', '2026-09-09 18:05:18 (UTC+08:00)');
+    const pending = projectStore.list().find(record => record.environment === 'staging')!;
+    expect(pending).toMatchObject({ projectId: '4', chatId: '', name: 'Dashboard', slug: 'dashboard' });
+    const savedFile = fs.readFileSync(path.join(dir, 'sentryProjects.json'), 'utf8');
+    await send(event, 'oc_project', '2026-09-09 18:05:18 (UTC+08:00)');
+    expect(fs.readFileSync(path.join(dir, 'sentryProjects.json'), 'utf8')).toBe(savedFile);
+    expect(projectStore.list()).toHaveLength(2);
+
+    await send({ ...event, project: 5, environment: 'production' }, CHAT_ID);
+    await send({ ...event, project: 6, environment: undefined }, CHAT_ID);
+    const reloaded = new SentryProjectStore(path.join(dir, 'sentryProjects.json'));
+    expect(reloaded.list()).toHaveLength(4);
+    expect(reloaded.get('4', 'staging')?.chatId).toBe('oc_project');
+    expect(reloaded.get('5', 'production')).toBeUndefined();
+    expect(reloaded.list()).toContainEqual(expect.objectContaining({ projectId: '6', chatId: '' }));
+    const headers = { 'X-Admin-Token': 'admin-test', 'Content-Type': 'application/json' };
+    expect(await (await fetch(`${baseUrl}/admin/sentry-projects/api`, { headers })).json()).toEqual(reloaded.list());
+    expect((await fetch(`${baseUrl}/admin/sentry-projects/api`, {
+      method: 'POST', headers, body: JSON.stringify({ projectId: '4', environment: 'staging', chatId: 'oc_stage', timezone: 'UTC' }),
+    })).status).toBe(200);
+    await send(event, 'oc_stage', '2026-09-09 10:05:18 (UTC+00:00)');
+    expect(projectStore.get('4', 'staging')).toMatchObject({ chatId: 'oc_stage', createdAt: pending.createdAt, name: 'Dashboard' });
+  });
+
+  it('保存待配置记录失败时仍转发告警，下一次告警重试保存', async () => {
+    const failure = new Error('disk unavailable');
+    const rename = vi.spyOn(fs, 'renameSync').mockImplementation(() => { throw failure; });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const body = JSON.stringify({ action: 'triggered', data: { event: { title: 'x', project: 4, environment: 'staging' } } });
+      expect(await (await postAlert(body, sign(body))).json()).toEqual({ ok: true });
+      expect(error).toHaveBeenCalledWith('[sentry] 保存项目/环境配置失败：', failure);
+      await vi.waitFor(() => expect(feishuPost.mock.calls.some(([url, payload]) => String(url).startsWith('/im/v1/messages') && payload.receive_id === CHAT_ID)).toBe(true));
+      expect(projectStore.list()).toEqual([]);
+      rename.mockRestore();
+      expect((await postAlert(body, sign(body))).status).toBe(200);
+      expect(new SentryProjectStore(path.join(dir, 'sentryProjects.json')).list()).toEqual([
+        expect.objectContaining({ projectId: '4', environment: 'staging', chatId: '' }),
+      ]);
+    } finally {
+      rename.mockRestore();
+      error.mockRestore();
     }
   });
 
@@ -284,16 +349,19 @@ describe('POST /webhooks/sentry', () => {
   });
 
   it('签名错误返回 401，不调用飞书接口', async () => {
-    const resp = await postAlert(alertBody, sign(alertBody, 'wrong-secret'));
+    const body = JSON.stringify({ action: 'triggered', data: { event: { title: 'x', project: 4, environment: 'production' } } });
+    const resp = await postAlert(body, sign(body, 'wrong-secret'));
     expect(resp.status).toBe(401);
     expect(feishuPost).not.toHaveBeenCalled();
+    expect(projectStore.list()).toEqual([]);
   });
 
   it('installation/uninstall 事件直接确认不转发', async () => {
-    const body = JSON.stringify({ action: 'deleted' });
+    const body = JSON.stringify({ action: 'deleted', data: { event: { project: 4, environment: 'production' } } });
     const resp = await postAlert(body, sign(body), 'uninstall');
     expect(resp.status).toBe(200);
     expect(feishuPost).not.toHaveBeenCalled();
+    expect(projectStore.list()).toEqual([]);
   });
 
   it('未配置 Sentry 相关环境变量时返回 503', async () => {

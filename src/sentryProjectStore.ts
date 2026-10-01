@@ -3,8 +3,8 @@ import path from 'node:path';
 
 /**
  * Sentry 项目 ID + 可选 environment → 飞书群 chat_id 的映射。
- * 未匹配环境专属映射时回退到项目默认映射。slug/name 在收到该项目
- * 第一条真实告警后自动回填，不会覆盖已有值、也不会自动新增映射。
+ * 未匹配已配置群的环境映射时回退到项目默认映射。首次收到新的项目/环境
+ * 自动新增待配置记录（chatId 为空），并回填 slug/name。
  *
  * timezone 是这条映射（也就是目标群）专属的卡片时间显示时区——飞书卡片没有"按查看者
  * 本地时区显示"的概念，只能网关侧固定选一个；不同群面向不同地区的人，就需要能各配各的
@@ -15,6 +15,7 @@ export interface SentryProjectRecord {
   projectId: string;
   /** Sentry environment 原值，区分大小写；未设置则为项目默认映射 */
   environment?: string;
+  /** 空字符串表示自动发现、等待管理员配置接收群 */
   chatId: string;
   slug?: string;
   name?: string;
@@ -83,7 +84,10 @@ export class SentryProjectStore {
   }
 
   get(projectId: string, environment?: string): SentryProjectRecord | undefined {
-    return this.data.projects[this.key(projectId, environment)] ?? this.data.projects[this.key(projectId)];
+    const exact = this.data.projects[this.key(projectId, environment)];
+    if (exact?.chatId) return exact;
+    const fallback = this.data.projects[this.key(projectId)];
+    return fallback?.chatId ? fallback : undefined;
   }
 
   /**
@@ -134,18 +138,36 @@ export class SentryProjectStore {
     return true;
   }
 
-  /** 收到真实告警后为已存在的映射补充 slug/name；映射不存在时不做任何事 */
-  enrich(projectId: string, info: { slug?: string; name?: string }): void {
+  /** 收到真实告警后新增待配置记录，并为该项目所有映射补充 slug/name */
+  enrich(projectId: string, info: { slug?: string; name?: string }, environment?: string): void {
+    projectId = projectId.trim();
+    if (!projectId) return;
+    environment = typeof environment === 'string' ? environment.trim() || undefined : undefined;
+    const key = this.key(projectId, environment);
+    const previous = this.data.projects;
+    const projects = { ...previous };
     let changed = false;
-    for (const record of Object.values(this.data.projects)) {
+    if (!projects[key]) {
+      const known = Object.values(projects).find(record => record.projectId === projectId);
+      const now = Date.now();
+      projects[key] = { projectId, environment, chatId: '', slug: known?.slug, name: known?.name, createdAt: now, updatedAt: now };
+      changed = true;
+    }
+    for (const [recordKey, record] of Object.entries(projects)) {
       if (record.projectId !== projectId) continue;
       if ((info.slug && record.slug !== info.slug) || (info.name && record.name !== info.name)) {
-        if (info.slug) record.slug = info.slug;
-        if (info.name) record.name = info.name;
-        record.updatedAt = Date.now();
+        projects[recordKey] = { ...record, slug: info.slug || record.slug, name: info.name || record.name, updatedAt: Date.now() };
         changed = true;
       }
     }
-    if (changed) this.saveToDisk();
+    if (changed) {
+      this.data.projects = projects;
+      try {
+        this.saveToDisk();
+      } catch (err) {
+        this.data.projects = previous;
+        throw err;
+      }
+    }
   }
 }

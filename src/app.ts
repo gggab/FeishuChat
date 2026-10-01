@@ -97,9 +97,13 @@ export function createApp(deps: AppDeps): Express {
     // 项目 + 环境映射 → 项目默认映射 → 全局默认群；都没有就不发。
     const projectMapping = alert.projectId ? sentryProjectStore.get(alert.projectId, alert.environment) : undefined;
     const chatId = projectMapping?.chatId || feishuAlertChatId;
-    // 收到真实告警时，为已存在的项目映射自动回填 slug/name，方便管理页面展示
-    if (alert.projectId && (alert.projectSlug || alert.projectName)) {
-      sentryProjectStore.enrich(alert.projectId, { slug: alert.projectSlug, name: alert.projectName });
+    // 自动发现项目/环境，留空接收群等待配置；保存失败也继续按原路由发送。
+    if (alert.projectId) {
+      try {
+        sentryProjectStore.enrich(alert.projectId, { slug: alert.projectSlug, name: alert.projectName }, alert.environment);
+      } catch (err: unknown) {
+        console.error('[sentry] 保存项目/环境配置失败：', err);
+      }
     }
     if (!chatId) {
       console.log(`[sentry] 未找到可用的飞书群（项目=${alert.projectId ?? '-'} 环境=${alert.environment ?? '-'} 且默认群未配置），跳过发送`);
